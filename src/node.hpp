@@ -1,11 +1,11 @@
 #pragma once
 
-#include "node.hpp"
+#include <string>
 
 
-class Component {
+class Node {
     public:
-        Component(const std::string& name);
+        Node(const std::string& name);
 
         const std::string& GetName() const;
 
