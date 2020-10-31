@@ -12,6 +12,12 @@ enum ComponentType {
 };
 
 
+enum TerminalType {
+    POSITIVE,
+    NEGATIVE
+};
+
+
 class Component {
 
     /*
@@ -25,9 +31,17 @@ class Component {
     */
 
     public:
-        Component(const std::string& name);
+        Component(
+            const std::string& name,
+            Node *pos_terminal = nullptr,
+            Node *neg_terminal = nullptr
+        );
 
         const std::string& GetName() const;
+
+        const Node* GetTerminalNode(TerminalType terminal) const;
+
+        void ConnectNodeToTerminal(Node *node, TerminalType terminal);
 
         virtual float GetValue() const = 0;
 
@@ -37,4 +51,6 @@ class Component {
 
     private:
         std::string name_;
+        Node* pos_terminal_;
+        Node* neg_terminal_;
 };
