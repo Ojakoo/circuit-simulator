@@ -26,6 +26,12 @@ std::ostream &operator<<(std::ostream &out, const Component& c) {
         case CAPACITOR:
             out << "Capacitor";
             break;
+        case DC_VOLTAGE_SOURCE:
+            out << "DC Voltage Source";
+            break;
+        case DC_CURRENT_SOURCE:
+            out << "DC Current Source";
+            break;
         default:
             out << "Invalid component";
     }
