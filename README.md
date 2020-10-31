@@ -19,3 +19,19 @@ use as follows:
 
 You may also add other new directories as needed, for example
 for testing tools.
+
+How to run:
+
+```
+cd circuit-sim-2020-2
+cd build
+cmake ..
+make
+./main
+```
+
+And finally remove everything from build folder:
+
+```
+rm -r *
+```
