@@ -1,8 +1,8 @@
 #include "capacitor.hpp"
 
 
-Capacitor::Capacitor(const std::string &name)
-    : Component(name) { }
+Capacitor::Capacitor(const std::string &name, float capacitance)
+    : Component(name), capacitance_(capacitance) { }
 
 
 float Capacitor::GetValue() const {

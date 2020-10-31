@@ -1,8 +1,8 @@
 #include "inductor.hpp"
 
 
-Inductor::Inductor(const std::string &name)
-    : Component(name) { }
+Inductor::Inductor(const std::string &name, float inductance)
+    : Component(name), inductance_(inductance) { }
 
 
 float Inductor::GetValue() const {

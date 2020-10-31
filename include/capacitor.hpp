@@ -5,7 +5,7 @@
 
 class Capacitor: public Component {
     public:
-        Capacitor(const std::string& name);
+        Capacitor(const std::string& name, float capacitance = 0);
 
         float GetValue() const;
 

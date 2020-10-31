@@ -5,7 +5,7 @@
 
 class Inductor: public Component {
     public:
-        Inductor(const std::string& name);
+        Inductor(const std::string& name, float inductance = 0);
 
         float GetValue() const;
 

@@ -20,6 +20,8 @@ class Component {
 
         virtual ComponentType GetType() const = 0;
 
+        friend std::ostream &operator<<(std::ostream &out, const Component& c);
+
     private:
         std::string name_;
 };

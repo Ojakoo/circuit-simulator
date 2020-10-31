@@ -6,11 +6,14 @@
 
 
 int main ( void ) {
-    Resistor R = Resistor("R1");
-    Inductor L = Inductor("L1");
-    Capacitor C = Capacitor("C1"); 
-    std::cout << R.GetName() << R.GetType() << R.GetValue() << std::endl;
-    std::cout << L.GetName() << L.GetType() << L.GetValue() << std::endl;
-    std::cout << C.GetName() << C.GetType() << C.GetValue() << std::endl;
+
+    Resistor R = Resistor("R1", 50);
+    Inductor L = Inductor("L1", 0.001);
+    Capacitor C = Capacitor("C1", 0.0009);
+
+    std::cout << R << std::endl;
+    std::cout << L << std::endl;
+    std::cout << C << std::endl;
+
     return 0;
 }

@@ -5,7 +5,7 @@
 
 class Resistor: public Component {
     public:
-        Resistor(const std::string& name);
+        Resistor(const std::string& name, float resistance = 0);
 
         float GetValue() const;
 

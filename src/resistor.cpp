@@ -1,8 +1,8 @@
 #include "resistor.hpp"
 
 
-Resistor::Resistor(const std::string &name)
-    : Component(name) { }
+Resistor::Resistor(const std::string &name, float resistance)
+    : Component(name), resistance_(resistance) { }
 
 
 float Resistor::GetValue() const {
