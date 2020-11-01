@@ -24,13 +24,14 @@ How to run:
 
 ```
 cd circuit-sim-2020-2
+mkdir build
 cd build
 cmake ..
 make
 ./main
 ```
 
-And finally remove everything from build folder:
+Remove everything from build folder:
 
 ```
 rm -r *
