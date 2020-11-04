@@ -38,6 +38,7 @@ cd circuit-sim-2020-2
 mkdir build
 cd build
 cmake ..
+make
 make test
 ```
 
