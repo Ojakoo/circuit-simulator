@@ -28,7 +28,18 @@ mkdir build
 cd build
 cmake ..
 make
-./main
+./src/main
+```
+
+How to run tests:
+
+```
+cd circuit-sim-2020-2
+mkdir build
+cd build
+cmake ..
+make
+make test
 ```
 
 Remove everything from build folder:
