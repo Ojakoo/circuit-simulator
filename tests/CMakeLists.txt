@@ -1,6 +1,7 @@
 add_library(test_main
             OBJECT
             test_main.cpp
+            ../src/circuit.cpp
             ../src/read_file.cpp
             ../src/resistor.cpp
             ../src/capacitor.cpp
