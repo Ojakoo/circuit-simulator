@@ -50,10 +50,8 @@ Circuit ReadCircuitFromFile(const std::string& file_name) {
 
             iss >> type >> name >> input_node >> output_node >> value;
 
-            std::shared_ptr<Node> in = std::make_shared<Node>(
-                input_node, input_node == "0" ? GROUND : NORMAL);
-            std::shared_ptr<Node> out = std::make_shared<Node>(
-                input_node, input_node == "0" ? GROUND : NORMAL);
+            std::shared_ptr<Node> in = circuit.AddNode(input_node);
+            std::shared_ptr<Node> out = circuit.AddNode(output_node);
             
             iss >> type >> name >> input_node >> output_node >> value;
             if ( type == "R" ) {
