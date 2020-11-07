@@ -10,6 +10,6 @@ class MNAsolver {
         const VectorXcf& solveSteady(const MatrixXcf& A, const VectorXcf& z) const;
 
     private:
-        MatrixXcf test = MatrixXcf::Random(3,3);
+        MatrixXcf test = MatrixXcf::Zero(3,3);
 
 };
