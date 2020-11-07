@@ -7,11 +7,11 @@
 class Circuit {
 public:
     Circuit() {}
-    ~Circuit();
-    const std::list<Component*>& GetComponents() const;
-    void AddComponent(Component* component);
+
+    const std::list<std::shared_ptr<Component>>& GetComponents() const;
+    void AddComponent(std::shared_ptr<Component> component);
 private:
-    std::list<Component*> components_;
+    std::list<std::shared_ptr<Component>> components_;
 };
 
 std::ostream &operator<<(std::ostream& out, const Circuit& circuit);

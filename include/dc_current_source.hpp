@@ -5,7 +5,10 @@
 
 class DCCurrentSource : public Component{
     public:
-        DCCurrentSource(const std::string& name, float current);
+        DCCurrentSource(const std::string& name,
+                        float current = 0,
+                        std::shared_ptr<Node> input = nullptr,
+                        std::shared_ptr<Node> output = nullptr);
 
         float GetValue() const;
 

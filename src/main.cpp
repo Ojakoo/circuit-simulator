@@ -5,14 +5,19 @@
 #include "capacitor.hpp"
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
+#include "circuit.hpp"
+#include "read_file.hpp"
 
 
 int main ( void ) {
 
-    Node N001 = Node("N001");
-    Node N002 = Node("N002");
+    Circuit c = ReadCircuitFromFile("../../tests/netlist.txt");
 
-    N002.SetNodeType(GROUND);
+    /*
+    std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");
+    std::shared_ptr<Node> N002 = std::make_shared<Node>("N002");
+
+    N002->SetNodeType(GROUND);
 
     Resistor R1 = Resistor("R1", 50);
     Inductor L1 = Inductor("L1", 0.001);
@@ -20,16 +25,16 @@ int main ( void ) {
     DCVoltageSource V1 = DCVoltageSource("V1", 10);
     DCCurrentSource J1 = DCCurrentSource("J1", 2);
 
-    R1.ConnectNodeToTerminal(&N001, POSITIVE);
-    R1.ConnectNodeToTerminal(&N002, NEGATIVE);
+    R1.ConnectNodeToTerminal(N001, OUTPUT);
+    R1.ConnectNodeToTerminal(N002, INPUT);
 
-    L1.ConnectNodeToTerminal(&N002, NEGATIVE);
+    L1.ConnectNodeToTerminal(N002, INPUT);
 
     std::cout << R1 << std::endl;
     std::cout << L1 << std::endl;
     std::cout << C1 << std::endl;
     std::cout << V1 << std::endl;
     std::cout << J1 << std::endl;
-
+    */
     return 0;
 }
