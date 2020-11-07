@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "node.hpp"
 
 
@@ -13,8 +15,8 @@ enum ComponentType {
 
 
 enum TerminalType {
-    POSITIVE,
-    NEGATIVE
+    OUTPUT,
+    INPUT
 };
 
 
@@ -26,22 +28,22 @@ class Component {
 
     Sources, resistors, capacitors and inductors
     all have unique name and the element might be connected
-    to nodes via positive and negative terminals.
+    to nodes via input and output terminals.
 
     */
 
     public:
         Component(
             const std::string& name,
-            Node *pos_terminal = nullptr,
-            Node *neg_terminal = nullptr
+            std::shared_ptr<Node> input,
+            std::shared_ptr<Node> output
         );
 
         const std::string& GetName() const;
 
-        const Node* GetTerminalNode(TerminalType terminal) const;
+        const std::shared_ptr<Node> GetTerminalNode(TerminalType terminal) const;
 
-        void ConnectNodeToTerminal(Node *node, TerminalType terminal);
+        void ConnectNodeToTerminal(std::shared_ptr<Node> node, TerminalType terminal);
 
         virtual float GetValue() const = 0;
 
@@ -51,6 +53,6 @@ class Component {
 
     private:
         std::string name_;
-        Node* pos_terminal_;
-        Node* neg_terminal_;
+        std::shared_ptr<Node> output_;
+        std::shared_ptr<Node> input_;
 };

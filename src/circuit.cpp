@@ -1,16 +1,12 @@
 #include "circuit.hpp"
 
-Circuit::~Circuit() {
-    for (auto it : components_) {
-        delete it;
-    }
-}
 
-const std::list<Component*>& Circuit::GetComponents() const { 
+
+const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const { 
     return components_; 
 }
 
-void Circuit::AddComponent(Component* component) { 
+void Circuit::AddComponent(std::shared_ptr<Component> component) { 
     components_.push_back(component); 
 }
 

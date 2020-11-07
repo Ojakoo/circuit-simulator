@@ -1,7 +1,10 @@
 #include "dc_current_source.hpp"
 
-DCCurrentSource::DCCurrentSource(const std::string &name, float current)
-    : Component(name), current_(current) { }
+DCCurrentSource::DCCurrentSource(const std::string &name,
+                                float current,
+                                std::shared_ptr<Node> input,
+                                std::shared_ptr<Node> output)
+    : Component(name, input, output), current_(current) { }
 
 
 float DCCurrentSource::GetValue() const {

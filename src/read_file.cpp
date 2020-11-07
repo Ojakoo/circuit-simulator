@@ -2,9 +2,10 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-// #include <exception>
-// #include <memory>
+#include <exception>
+#include <memory>
 
+#include "circuit.hpp"
 #include "component.hpp"
 #include "resistor.hpp"
 #include "inductor.hpp"
@@ -14,34 +15,8 @@
 #include "node.hpp"
 #include "read_file.hpp"
 
-/*
-Component CreateComponent(std::stringstream iss) {
-    std::string type;  // component type (R, L, C, V, J)
-    std::string name;  // component name
-    std::string input_node;  // negative
-    std::string output_node;  // positive
-    float value;  // value (eg. resistance, capacitance)
-    
-    iss >> type >> name >> input_node >> output_node >> value;
-    if ( type == "R" ) {
-        Component c = Resistor(name, value);
-    } else if ( type == "L" ) {
-        Component c = Inductor(name, value);
-    } else if ( type == "C" ) {
-        Component c = Capacitor(name, value);
-    } else if ( type == "V" ) {
-        Component c = DCVoltageSource(name, value);
-    } else {
-        throw std::invalid_argument("Invalid netlist.");
-    }
-    std::shared_ptr<Node> in = std::make_shared<Node>(
-        input_node, input_node == "0" ? GROUND : NORMAL);
-    std::shared_ptr<Node> out = std::make_shared<Node>(
-        input_node, input_node == "0" ? GROUND : NORMAL);
-}
-*/
 
-void ReadCircuitFromFile(std::string& file_name) {
+Circuit ReadCircuitFromFile(const std::string& file_name) {
 
     /*
     Netlist format:
@@ -55,8 +30,9 @@ void ReadCircuitFromFile(std::string& file_name) {
     L L1 0 N002 0.05
 
     */
-
+    Circuit circuit;
     std::ifstream ifstr(file_name);
+
     if (ifstr.rdstate() & (ifstr.failbit | ifstr.badbit)) {
         std::cerr << "Failed" << std::endl;
     } else {
@@ -65,8 +41,37 @@ void ReadCircuitFromFile(std::string& file_name) {
             std::string line;
             std::getline(ifstr, line);
             std::stringstream iss(line);
+
+            std::string type;
+            std::string name;
+            std::string input_node;
+            std::string output_node;
+            float value;
+
+            iss >> type >> name >> input_node >> output_node >> value;
+
+            std::shared_ptr<Node> in = std::make_shared<Node>(
+                input_node, input_node == "0" ? GROUND : NORMAL);
+            std::shared_ptr<Node> out = std::make_shared<Node>(
+                input_node, input_node == "0" ? GROUND : NORMAL);
             
-            std::cout << iss.str() << std::endl;
+            iss >> type >> name >> input_node >> output_node >> value;
+            if ( type == "R" ) {
+                std::shared_ptr<Resistor> R = std::make_shared<Resistor>(name, value, in, out);
+                circuit.AddComponent(R);
+            } else if ( type == "L" ) {
+                std::shared_ptr<Inductor> L = std::make_shared<Inductor>(name, value, in, out);
+                circuit.AddComponent(L);
+            } else if ( type == "C" ) {
+                std::shared_ptr<Capacitor> C = std::make_shared<Capacitor>(name, value, in, out);
+                circuit.AddComponent(C);
+            } else if ( type == "V" ) {
+                std::shared_ptr<DCVoltageSource> V = std::make_shared<DCVoltageSource>(name, value, in, out);
+                circuit.AddComponent(V);
+            } else {
+                throw std::invalid_argument("Invalid netlist.");
+            }
         }
     }
+    return circuit;
 }

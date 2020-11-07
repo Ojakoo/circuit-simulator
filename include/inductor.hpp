@@ -5,7 +5,10 @@
 
 class Inductor: public Component {
     public:
-        Inductor(const std::string& name, float inductance = 0);
+        Inductor(const std::string& name,
+        float inductance = 0,
+        std::shared_ptr<Node> input = nullptr,
+        std::shared_ptr<Node> output = nullptr);
 
         float GetValue() const;
 

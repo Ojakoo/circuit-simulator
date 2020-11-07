@@ -2,4 +2,6 @@
 
 #include <string>
 
-void ReadCircuitFromFile(std::string& file_name);
+#include "circuit.hpp"
+
+Circuit ReadCircuitFromFile(const std::string& file_name);

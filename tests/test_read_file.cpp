@@ -2,21 +2,19 @@
 
 #include "doctest.h"
 #include "read_file.hpp"
-#include "resistor.hpp"
+#include "circuit.hpp"
 
 
 SCENARIO("Reading circuit from a good file") {
 
   GIVEN("a good file to read") {
-    std::string fname = "netlist.txt";
-
-    Resistor r = Resistor("r");
+    const std::string fname = "../../tests/netlist.txt";
 
     WHEN("the good file is read") {
-      ReadCircuitFromFile(fname);
+      Circuit c = ReadCircuitFromFile(fname);
       
-      THEN("it's expected nobody interupted our rest") {
-        CHECK(1 == 0);
+      THEN("There will be 4 components in the circuit") {
+        CHECK(c.GetComponents().size() == 4);
       }
       
     }
