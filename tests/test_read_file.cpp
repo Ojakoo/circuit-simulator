@@ -8,7 +8,7 @@
 SCENARIO("Reading circuit from a good file") {
 
   GIVEN("a good file to read") {
-    const std::string fname = "../../tests/netlist.txt";
+    const std::string fname = "../../tests/netlists/netlist_good.txt";
 
     WHEN("the good file is read") {
       Circuit c = ReadCircuitFromFile(fname);
@@ -26,4 +26,40 @@ SCENARIO("Reading circuit from a good file") {
       }
     }
   }
-} 
+}
+
+
+SCENARIO("Reading circuit from a bad file") {
+
+  GIVEN("a bad file to read") {
+    const std::string fname = "../../tests/netlists/netlist_bad.txt";
+
+    WHEN("the bad file is read") {
+      CHECK_THROWS(ReadCircuitFromFile(fname));
+    }
+  }
+}
+
+
+SCENARIO("Reading invalid netlist path") {
+
+  GIVEN("a random path to read") {
+    const std::string fname = "../../tests/asddsadfsafd.txt";
+
+    WHEN("the random path file is read") {
+      CHECK_THROWS(ReadCircuitFromFile(fname));
+    }
+  }
+}
+
+
+SCENARIO("Reading a good netlist but with invalid component type") {
+
+  GIVEN("a good netlist to read") {
+    const std::string fname = "../../tests/netlists/netlist_invalid_type.txt";
+
+    WHEN("the netlist is read") {
+      CHECK_THROWS(ReadCircuitFromFile(fname));
+    }
+  }
+}

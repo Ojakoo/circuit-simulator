@@ -16,6 +16,7 @@
 #include "read_file.hpp"
 
 
+
 Circuit ReadCircuitFromFile(const std::string& file_name) {
 
     /*
@@ -34,7 +35,7 @@ Circuit ReadCircuitFromFile(const std::string& file_name) {
     std::ifstream ifstr(file_name);
 
     if (ifstr.rdstate() & (ifstr.failbit | ifstr.badbit)) {
-        std::cerr << "Failed" << std::endl;
+        throw std::runtime_error("Failed to read netlist file.");
     } else {
         while ( !ifstr.eof() ) {
             // read a line from file
@@ -49,6 +50,11 @@ Circuit ReadCircuitFromFile(const std::string& file_name) {
             float value;
 
             iss >> type >> name >> input_node >> output_node >> value;
+
+            if (!iss) {
+                // Check that reading succeeded
+                throw std::runtime_error("Error while reading netlist file.");
+            }
 
             std::shared_ptr<Node> in = circuit.AddNode(input_node);
             std::shared_ptr<Node> out = circuit.AddNode(output_node);
@@ -67,7 +73,7 @@ Circuit ReadCircuitFromFile(const std::string& file_name) {
                 std::shared_ptr<DCVoltageSource> V = std::make_shared<DCVoltageSource>(name, value, in, out);
                 circuit.AddComponent(V);
             } else {
-                throw std::invalid_argument("Invalid netlist.");
+                throw std::runtime_error("Invalid component type found in netlist.");
             }
         }
     }
