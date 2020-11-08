@@ -13,11 +13,50 @@
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
 #include "node.hpp"
-#include "read_file.hpp"
+#include "save_and_load.hpp"
 
+void SaveNetList(Circuit& circuit, const std::string& file_name) {
 
+    // open a file for writing
+    std::ofstream os(file_name);
 
-Circuit ReadCircuitFromFile(const std::string& file_name) {
+    // write to the file
+    auto begin = circuit.GetComponents().begin();
+	for ( ; begin != circuit.GetComponents().end(); begin++ ) {
+        ComponentType type = (*begin)->GetType();
+        std::string symbol;
+        switch ( type ) {
+            case RESISTOR:
+                symbol = "R";
+                break;
+            case CAPACITOR:
+                symbol = "C";
+                break;
+            case INDUCTOR:
+                symbol = "L";
+                break;
+            case DC_VOLTAGE_SOURCE:
+                symbol = "V";
+                break;
+            case DC_CURRENT_SOURCE:
+                symbol = "J";
+                break;
+        }
+        os << symbol << " "
+           << (*begin)->GetName() << " "
+           << (*begin)->GetTerminalNode(INPUT)->GetName() << " "
+           << (*begin)->GetTerminalNode(OUTPUT)->GetName() << " "
+           << (*begin)->GetValue() ;
+        
+        // add newline if not last component
+        if (begin != --circuit.GetComponents().end()) os << std::endl;
+    }
+
+	// close the file
+	os.close();
+}
+
+Circuit LoadNetList(const std::string& file_name) {
 
     /*
     Netlist format:
@@ -77,5 +116,7 @@ Circuit ReadCircuitFromFile(const std::string& file_name) {
             }
         }
     }
+
+    ifstr.close();
     return circuit;
 }

@@ -6,12 +6,14 @@
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
 #include "circuit.hpp"
-#include "read_file.hpp"
+#include "save_and_load.hpp"
 
 
 int main ( void ) {
 
-    Circuit c = ReadCircuitFromFile("../../tests/netlist.txt");
+    Circuit c = LoadNetList("../../tests/netlists/netlist_good.txt");
+
+    SaveNetList(c, "l.txt");
 
     /*
     std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");

@@ -1,7 +1,7 @@
 #include <string>
 
 #include "doctest.h"
-#include "read_file.hpp"
+#include "save_and_load.hpp"
 #include "circuit.hpp"
 
 
@@ -11,7 +11,7 @@ SCENARIO("Reading circuit from a good file") {
     const std::string fname = "../../tests/netlists/netlist_good.txt";
 
     WHEN("the good file is read") {
-      Circuit c = ReadCircuitFromFile(fname);
+      Circuit c = LoadNetList(fname);
       
       THEN("There will be 4 components in the circuit") {
         CHECK(c.GetComponents().size() == 4);
@@ -35,7 +35,7 @@ SCENARIO("Reading circuit from a bad file") {
     const std::string fname = "../../tests/netlists/netlist_bad.txt";
 
     WHEN("the bad file is read") {
-      CHECK_THROWS(ReadCircuitFromFile(fname));
+      CHECK_THROWS(LoadNetList(fname));
     }
   }
 }
@@ -47,7 +47,7 @@ SCENARIO("Reading invalid netlist path") {
     const std::string fname = "../../tests/asddsadfsafd.txt";
 
     WHEN("the random path file is read") {
-      CHECK_THROWS(ReadCircuitFromFile(fname));
+      CHECK_THROWS(LoadNetList(fname));
     }
   }
 }
@@ -59,7 +59,7 @@ SCENARIO("Reading a good netlist but with invalid component type") {
     const std::string fname = "../../tests/netlists/netlist_invalid_type.txt";
 
     WHEN("the netlist is read") {
-      CHECK_THROWS(ReadCircuitFromFile(fname));
+      CHECK_THROWS(LoadNetList(fname));
     }
   }
 }
