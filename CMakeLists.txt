@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.4)
+cmake_minimum_required(VERSION 3.0)
 project(circuit-sim-2020-2)
 
 enable_testing()
