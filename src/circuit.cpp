@@ -1,9 +1,17 @@
 #include "component.hpp"
 #include "circuit.hpp"
+using namespace Eigen;
+
+const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
+    return components_;
+}
+
+const MatrixXcf& Circuit::sMatrix() const{
+    MatrixXcf res = MatrixXcf::Zero(n_+m_,n_+m_);
+    MatrixXf real = MatrixXf::Zero(n_+m_,n_+m_);
+    MatrixXf imag = MatrixXf::Zero(n_+m_,n_+m_);
 
 
-const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const { 
-    return components_; 
 }
 
 const int Circuit::GetNodeCount() const {
@@ -30,7 +38,7 @@ void Circuit::AddComponent(std::shared_ptr<Component> component) {
     if (type == DC_VOLTAGE_SOURCE || type == DC_CURRENT_SOURCE) {
         m_++;
     }
-    components_.push_back(component); 
+    components_.push_back(component);
 }
 
 std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {
