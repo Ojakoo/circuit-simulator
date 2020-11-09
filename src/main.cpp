@@ -14,7 +14,7 @@
 
 int main ( void ) {
 
-    //Circuit c = ReadCircuitFromFile("../../tests/netlist.txt");
+    Circuit c = ReadCircuitFromFile("../../tests/netlist.txt");
 
     //MNA-solver test
     MNAsolver MNA = MNAsolver();
