@@ -6,6 +6,11 @@ enable_testing()
 # Bring headers into the project
 include_directories(include)
 
+
+
+#find_package(Eigen3 REQUIRED)
+include_directories(lib/eigen)
+
 # Doctest wants c++11
 set(CMAKE_CXX_STANDARD 11)
 

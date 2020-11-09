@@ -7,6 +7,10 @@
 #include "dc_current_source.hpp"
 #include "circuit.hpp"
 #include "save_and_load.hpp"
+#include "MNAsolver.hpp"
+#include "read_file.hpp"
+#include "Eigen/Dense"
+
 
 
 int main ( void ) {
@@ -14,6 +18,23 @@ int main ( void ) {
     Circuit c = LoadNetList("../../tests/netlists/netlist_good.txt");
 
     SaveNetList(c, "l.txt");
+
+    //MNA-solver test
+    MNAsolver MNA = MNAsolver();
+    const Eigen::MatrixXcf testA = Eigen::MatrixXcf::Random(3,3);
+    const Eigen::VectorXcf testZ = Eigen::VectorXcf::Random(3);
+    const Eigen::VectorXcf testX = MNA.solveSteady(testA,testZ);
+    std::cout << "A matrix is: \n" << testA << std::endl;
+    std::cout << "Z vector is: \n" << testZ << std::endl;
+    std::cout << "X vector is: \n" << testX << std::endl;
+
+
+
+
+
+
+
+
 
     /*
     std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");
