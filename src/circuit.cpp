@@ -1,7 +1,6 @@
 #include "component.hpp"
 #include "circuit.hpp"
 
-
 const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const { 
     return components_; 
 }

@@ -17,3 +17,6 @@ add_test(NAME load_file COMMAND load_file)
 
 add_executable(save_file test_save_file.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME save_file COMMAND save_file)
+
+add_executable(circuit test_circuit.cpp $<TARGET_OBJECTS:test_main>)
+add_test(NAME circuit COMMAND circuit)
