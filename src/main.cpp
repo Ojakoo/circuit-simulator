@@ -18,9 +18,9 @@ int main ( void ) {
 
     //MNA-solver test
     MNAsolver MNA = MNAsolver();
-    Eigen::MatrixXcf testA = Eigen::MatrixXcf::Random(3,3);
-    Eigen::VectorXcf testZ = Eigen::VectorXcf::Random(3);
-    Eigen::VectorXcf testX = MNA.solveSteady(testA,testZ);
+    const Eigen::MatrixXcf testA = Eigen::MatrixXcf::Random(3,3);
+    const Eigen::VectorXcf testZ = Eigen::VectorXcf::Random(3);
+    const Eigen::VectorXcf testX = MNA.solveSteady(testA,testZ);
     std::cout << "A matrix is: \n" << testA << std::endl;
     std::cout << "Z vector is: \n" << testZ << std::endl;
     std::cout << "X vector is: \n" << testX << std::endl;
