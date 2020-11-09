@@ -8,16 +8,15 @@
 #include "circuit.hpp"
 #include "save_and_load.hpp"
 #include "MNAsolver.hpp"
-#include "read_file.hpp"
+#include "save_and_load.hpp"
 #include "Eigen/Dense"
-
 
 
 int main ( void ) {
 
-    Circuit c = LoadNetList("../../tests/netlists/netlist_good.txt");
+    //Circuit c = LoadNetList("../../tests/netlists/netlist_good.txt");
 
-    SaveNetList(c, "l.txt");
+    //SaveNetList(c, "l.txt");
 
     //MNA-solver test
     MNAsolver MNA = MNAsolver();
@@ -27,14 +26,6 @@ int main ( void ) {
     std::cout << "A matrix is: \n" << testA << std::endl;
     std::cout << "Z vector is: \n" << testZ << std::endl;
     std::cout << "X vector is: \n" << testX << std::endl;
-
-
-
-
-
-
-
-
 
     /*
     std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");

@@ -6,13 +6,15 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
     return components_;
 }
 
+/*
 const MatrixXcf& Circuit::sMatrix() const{
     MatrixXcf res = MatrixXcf::Zero(n_+m_,n_+m_);
     MatrixXf real = MatrixXf::Zero(n_+m_,n_+m_);
     MatrixXf imag = MatrixXf::Zero(n_+m_,n_+m_);
 
-
+    return imag;
 }
+*/
 
 const int Circuit::GetNodeCount() const {
     // return number of real nodes in circuit (no ground node)

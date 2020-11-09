@@ -15,7 +15,7 @@ public:
     Circuit() {}
 
     const std::list<std::shared_ptr<Component>>& GetComponents() const;
-    const MatrixXcf& sMatrix() const; //getting matrix for MNAsolver::solveSteady
+    //const MatrixXcf& sMatrix() const; //getting matrix for MNAsolver::solveSteady
     const int GetNodeCount() const;
     const int GetSourceCount() const;
     const std::shared_ptr<Node> AddNode(const std::string& node_name);
