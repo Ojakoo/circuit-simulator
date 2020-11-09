@@ -13,6 +13,8 @@ const MatrixXcf& Circuit::sMatrix() const{
     MatrixXf imag = MatrixXf::Zero(n_+m_,n_+m_);
 
     return imag;
+const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const { 
+    return components_; 
 }
 */
 
