@@ -1,4 +1,5 @@
 #include <iostream>
+#include <complex>
 
 #include "resistor.hpp"
 #include "inductor.hpp"
@@ -11,6 +12,7 @@
 #include "save_and_load.hpp"
 #include "Eigen/Dense"
 
+typedef std::complex<float> cd;
 
 int main ( void ) {
 
@@ -19,6 +21,7 @@ int main ( void ) {
     //SaveNetList(c, "l.txt");
 
     //MNA-solver test
+    /*
     MNAsolver MNA = MNAsolver();
     const Eigen::MatrixXcf testA = Eigen::MatrixXcf::Random(3,3);
     const Eigen::VectorXcf testZ = Eigen::VectorXcf::Random(3);
@@ -26,6 +29,54 @@ int main ( void ) {
     std::cout << "A matrix is: \n" << testA << std::endl;
     std::cout << "Z vector is: \n" << testZ << std::endl;
     std::cout << "X vector is: \n" << testX << std::endl;
+    */
+
+    //Matrix formation test
+    /*
+    const Eigen::MatrixXcf A = Eigen::MatrixXcf::Zero(3,3);
+    const Eigen::MatrixXf real = Eigen::MatrixXf::Zero(3,3);
+    const Eigen::MatrixXcf sum = A + real;
+    std::cout << "A matrix is: \n" << A << std::endl;
+    std::cout << "real matrix is: \n" << real << std::endl;
+    std::cout << "sum matrix is: \n" << sum << std::endl;
+    std::cout << A.size() << std::endl;
+    std::cout << A.rows() << std::endl;
+    std::cout << A.cols() << std::endl;
+    */
+
+    //Test for sMarix output
+
+    Eigen::Matrix4cf Ref;
+
+    Ref << cd(2,0), cd(0,0), cd(0,0), cd(0,0),
+    cd(0,0), cd(4,0), cd(-2,0), cd(0,0),
+    cd(0,0), cd(-2,0), cd(2,0), cd(0,0),
+    cd(0,0), cd(0,0), cd(0,0), cd(0,0);
+
+    std::cout << Ref << std::endl;
+    
+    Circuit c = Circuit();
+
+    std::shared_ptr<Node> n1 = c.AddNode("N001");
+    std::shared_ptr<Node> n2 = c.AddNode("N002");
+    std::shared_ptr<Node> g = c.AddNode("0");
+
+    std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 50, n1, n2);
+    std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R2", 50, n2, g);
+    std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 1, n2, g);
+    std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 2, n2, g);
+    std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 10, n1, g);
+
+    c.AddComponent(r1);
+    c.AddComponent(r2);
+    c.AddComponent(c1);
+    c.AddComponent(l1);
+    c.AddComponent(s1);
+
+    Eigen::MatrixXcf A = c.sMatrix();
+
+    std::cout << A << std::endl;
+    
 
     /*
     std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");

@@ -8,6 +8,10 @@ const std::string& Node::GetName() const {
     return name_;
 }
 
+const NodeType Node::GetType() const {
+    return type_;
+}
+
 void Node::SetNodeType(NodeType type) {
     type_ = type;
 }
