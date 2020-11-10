@@ -17,7 +17,7 @@ class Node {
 
         const std::string& GetName() const;
 
-        const NodeType GetNodeType() const;
+        const NodeType GetType() const;
 
         void SetNodeType(NodeType type);
 
