@@ -1,3 +1,4 @@
+<!---
 # Sample README file for C++ programming project
 
 This is an initial git repository for your programming project.
@@ -19,16 +20,12 @@ use as follows:
 
 You may also add other new directories as needed, for example
 for testing tools.
-
+!--->
 Dependencies:
 
 ```
-Eigen:
-mkdir lib
-cd lib
-git clone https://gitlab.com/libeigen/eigen.git
-cd eigen
-rm -rf .git 
+cd circuit-sim-2020-2
+git submodule update --init --recursive
 ```
 
 How to run:
