@@ -20,6 +20,15 @@ use as follows:
 You may also add other new directories as needed, for example
 for testing tools.
 
+Dependencies:
+
+```
+Eigen:
+mkdir lib
+cd lib
+git clone https://gitlab.com/libeigen/eigen.git
+```
+
 How to run:
 
 ```
