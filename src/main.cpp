@@ -1,5 +1,13 @@
 #include <iostream>
 
+#include "imgui-SFML.h"
+#include "imgui.h"
+
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/Window/Event.hpp>
+
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
@@ -14,10 +22,6 @@
 
 int main ( void ) {
 
-    //Circuit c = LoadNetList("../../tests/netlists/netlist_good.txt");
-
-    //SaveNetList(c, "l.txt");
-
     //MNA-solver test
     MNAsolver MNA = MNAsolver();
     const Eigen::MatrixXcf testA = Eigen::MatrixXcf::Random(3,3);
@@ -27,28 +31,38 @@ int main ( void ) {
     std::cout << "Z vector is: \n" << testZ << std::endl;
     std::cout << "X vector is: \n" << testX << std::endl;
 
-    /*
-    std::shared_ptr<Node> N001 = std::make_shared<Node>("N001");
-    std::shared_ptr<Node> N002 = std::make_shared<Node>("N002");
+    sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
+    window.setFramerateLimit(60);
+    ImGui::SFML::Init(window);
 
-    N002->SetNodeType(GROUND);
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
 
-    Resistor R1 = Resistor("R1", 50);
-    Inductor L1 = Inductor("L1", 0.001);
-    Capacitor C1 = Capacitor("C1", 0.0009);
-    DCVoltageSource V1 = DCVoltageSource("V1", 10);
-    DCCurrentSource J1 = DCCurrentSource("J1", 2);
+    sf::Clock deltaClock;
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            ImGui::SFML::ProcessEvent(event);
 
-    R1.ConnectNodeToTerminal(N001, OUTPUT);
-    R1.ConnectNodeToTerminal(N002, INPUT);
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
 
-    L1.ConnectNodeToTerminal(N002, INPUT);
+        ImGui::SFML::Update(window, deltaClock.restart());
 
-    std::cout << R1 << std::endl;
-    std::cout << L1 << std::endl;
-    std::cout << C1 << std::endl;
-    std::cout << V1 << std::endl;
-    std::cout << J1 << std::endl;
-    */
+        ImGui::Begin("Hello, world!");
+        ImGui::Button("Look at this pretty button");
+        ImGui::End();
+
+        window.clear();
+        window.draw(shape);
+        ImGui::SFML::Render(window);
+        window.display();
+    }
+
+    ImGui::SFML::Shutdown();
+
     return 0;
+
 }
