@@ -27,6 +27,8 @@ Eigen:
 mkdir lib
 cd lib
 git clone https://gitlab.com/libeigen/eigen.git
+cd eigen
+rm -rf .git 
 ```
 
 How to run:
