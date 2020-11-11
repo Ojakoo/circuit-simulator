@@ -12,6 +12,10 @@ float Inductor::GetValue() const {
     return inductance_;
 }
 
+std::complex<float> Inductor::GetAdmittance(const float w) const {
+    return std::complex<float>(0, 1 / (w * inductance_));
+}
+
 ComponentType Inductor::GetType() const {
     return INDUCTOR;
 }

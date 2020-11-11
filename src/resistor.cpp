@@ -12,6 +12,10 @@ float Resistor::GetValue() const {
     return resistance_;
 }
 
+float Resistor::GetAdmittance() const {
+    return 1 / resistance_;
+}
+
 ComponentType Resistor::GetType() const {
     return RESISTOR;
 }

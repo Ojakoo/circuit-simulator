@@ -1,5 +1,7 @@
 #pragma once
 
+#include <complex>
+
 #include "component.hpp"
 
 
@@ -11,6 +13,8 @@ class Resistor: public Component {
                 std::shared_ptr<Node> output = nullptr);
 
         float GetValue() const;
+
+        float GetAdmittance() const;
 
         ComponentType GetType() const;
 
