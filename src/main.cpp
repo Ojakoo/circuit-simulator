@@ -30,7 +30,7 @@ int main ( void ) {
     std::cout << "A matrix is: \n" << testA << std::endl;
     std::cout << "Z vector is: \n" << testZ << std::endl;
     std::cout << "X vector is: \n" << testX << std::endl;
-
+    /*
     sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
@@ -62,7 +62,7 @@ int main ( void ) {
     }
 
     ImGui::SFML::Shutdown();
-
+    */
     return 0;
 
 }

@@ -12,6 +12,10 @@ float Capacitor::GetValue() const {
     return capacitance_;
 }
 
+std::complex<float> Capacitor::GetAdmittance(const float w) const {
+    return std::complex<float>(0, w * capacitance_);
+}
+
 ComponentType Capacitor::GetType() const {
     return CAPACITOR;
 }

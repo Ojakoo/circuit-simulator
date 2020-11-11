@@ -1,5 +1,7 @@
 #pragma once
 
+#include <complex>
+
 #include "component.hpp"
 
 
@@ -11,6 +13,8 @@ class Inductor: public Component {
         std::shared_ptr<Node> output = nullptr);
 
         float GetValue() const;
+
+        std::complex<float> GetAdmittance(const float w) const;
 
         ComponentType GetType() const;
 
