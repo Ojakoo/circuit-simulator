@@ -4,6 +4,10 @@
 
 #include "node.hpp"
 
+enum ComponentClass {
+    PASSIVE,
+    ACTIVE
+};
 
 enum ComponentType {
     RESISTOR,
@@ -46,6 +50,8 @@ class Component {
         void ConnectNodeToTerminal(std::shared_ptr<Node> node, TerminalType terminal);
 
         virtual float GetValue() const = 0;
+
+        virtual ComponentClass GetClass() const = 0;
 
         virtual ComponentType GetType() const = 0;
 

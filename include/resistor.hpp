@@ -2,10 +2,10 @@
 
 #include <complex>
 
-#include "component.hpp"
+#include "passive_component.hpp"
 
 
-class Resistor: public Component {
+class Resistor: public PassiveComponent {
     public:
         Resistor(const std::string& name,
                 float resistance = 0,

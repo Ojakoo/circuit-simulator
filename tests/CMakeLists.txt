@@ -1,18 +1,10 @@
-add_library(test_main
-            OBJECT
-            test_main.cpp
-            ../src/circuit.cpp
-            ../src/save_and_load.cpp
-            ../src/resistor.cpp
-            ../src/capacitor.cpp
-            ../src/component.cpp
-            ../src/dc_current_source.cpp
-            ../src/dc_voltage_source.cpp
-            ../src/inductor.cpp
-            ../src/node.cpp
-            )
+file(GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+list(APPEND TEST_SOURCES "test_main.cpp")
+list(REMOVE_ITEM TEST_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-add_executable(load_file test_load_file.cpp $<TARGET_OBJECTS:test_main>)
+add_library(test_main OBJECT ${TEST_SOURCES})
+
+add_executable(load_file test_load_file.cpp ${TEST_SOURCES})
 add_test(NAME load_file COMMAND load_file)
 
 add_executable(save_file test_save_file.cpp $<TARGET_OBJECTS:test_main>)

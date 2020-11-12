@@ -2,10 +2,10 @@
 
 #include <complex>
 
-#include "component.hpp"
+#include "passive_component.hpp"
 
 
-class Capacitor: public Component {
+class Capacitor: public PassiveComponent {
     public:
         Capacitor(const std::string& name,
                   float capacitance = 0,
