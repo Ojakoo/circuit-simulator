@@ -1,7 +1,6 @@
 
 #include "circuit.hpp"
 
-<<<<<<< HEAD
 const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
     return components_;
 }
@@ -49,10 +48,6 @@ const MatrixXcf Circuit::sMatrix() const{
     }
 
     return A;
-=======
-const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const { 
-    return components_; 
->>>>>>> circuit testing
 }
 
 const int Circuit::GetNodeCount() const {

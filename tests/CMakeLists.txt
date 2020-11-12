@@ -20,5 +20,6 @@ add_test(NAME save_file COMMAND save_file)
 
 add_executable(admittance test_admittance.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME admittance COMMAND admittance)
+
 add_executable(circuit test_circuit.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME circuit COMMAND circuit)

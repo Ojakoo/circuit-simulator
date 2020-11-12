@@ -3,28 +3,21 @@
 
 #include "doctest.h"
 #include "circuit.hpp"
-<<<<<<< HEAD
-=======
 #include "component.hpp"
->>>>>>> circuit testing
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
 #include "node.hpp"
-<<<<<<< HEAD
 #include "Eigen/Dense"
 
 typedef std::complex<float> cd;
-=======
->>>>>>> circuit testing
 
 SCENARIO("Constructing circuit") {
     GIVEN("juu"){
         WHEN("jaa") {
             Circuit c = Circuit();
-<<<<<<< HEAD
 
             std::shared_ptr<Node> n1 = c.AddNode("N001");
             std::shared_ptr<Node> n2 = c.AddNode("N002");
@@ -88,8 +81,7 @@ SCENARIO("Producing matrix") {
 
             THEN("Matrix is built right") {
                 CHECK(A.isApprox(Ref));
-=======
-
+            }
             std::shared_ptr<Node> n1 = c.AddNode("N001");
             std::shared_ptr<Node> n2 = c.AddNode("N002");
             std::shared_ptr<Node> n3 = c.AddNode("N003");
@@ -128,7 +120,6 @@ SCENARIO("Producing matrix") {
 
             THEN("There is 2 components in circuit") {
                 CHECK(c.GetComponents().size() == 4);
->>>>>>> circuit testing
             }
         }
     }
