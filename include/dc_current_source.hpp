@@ -1,9 +1,9 @@
 #pragma once
 
-#include "component.hpp"
+#include "active_component.hpp"
 
 
-class DCCurrentSource : public Component{
+class DCCurrentSource : public ActiveComponent {
     public:
         DCCurrentSource(const std::string& name,
                         float current = 0,

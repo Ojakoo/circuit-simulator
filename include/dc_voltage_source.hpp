@@ -1,9 +1,9 @@
 #pragma once
 
-#include "component.hpp"
+#include "active_component.hpp"
 
 
-class DCVoltageSource : public Component{
+class DCVoltageSource : public ActiveComponent {
     public:
         DCVoltageSource(const std::string& name,
                         float voltage = 0,

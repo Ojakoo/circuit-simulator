@@ -2,10 +2,10 @@
 
 #include <complex>
 
-#include "component.hpp"
+#include "passive_component.hpp"
 
 
-class Inductor: public Component {
+class Inductor: public PassiveComponent {
     public:
         Inductor(const std::string& name,
         float inductance = 0,
