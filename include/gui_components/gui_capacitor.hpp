@@ -10,7 +10,7 @@ class GUICapacitor : public GUIComponent, public Capacitor {
         static const std::string CAPACITOR_TEXTURE;
 
         GUICapacitor(const std::string& name,
-                    float resistance = 0,
+                    float capacitance = 0,
                     std::shared_ptr<Node> input = nullptr,
                     std::shared_ptr<Node> output = nullptr,
                     const std::string& texture = CAPACITOR_TEXTURE
