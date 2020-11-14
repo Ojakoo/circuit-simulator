@@ -24,6 +24,7 @@
 
 // Include GUI components
 #include "gui_components/gui_resistor.hpp"
+#include "gui_components/gui_capacitor.hpp"
 
 typedef std::complex<float> cd;
 
@@ -36,6 +37,9 @@ int main ( void ) {
 
     GUIResistor R1("R1");
     R1.setPosition(50, 50);
+
+    GUICapacitor C1("C1");
+    C1.setPosition(100, 100);
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -76,6 +80,7 @@ int main ( void ) {
 
         window.clear(sf::Color(148, 143, 129));
         window.draw(R1);
+        window.draw(C1);
 
         ImGui::SFML::Render(window);
         window.display();
