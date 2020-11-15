@@ -36,6 +36,10 @@ int main ( void ) {
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
+    sf::View SimView(sf::FloatRect(0, 0, 640.f, 480.f));
+
+    window.setView(SimView);
+
     GUIResistor R1("R1");
     R1.setPosition(50, 50);
 
@@ -57,7 +61,13 @@ int main ( void ) {
                 case sf::Event::Closed:
                     window.close();
                     break;
-
+            
+                // catch the resize events
+                case sf::Event::Resized:
+                    // update the view to the new size of the window
+                    window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+                    break;
+                
                 // mouse pressed
                 case sf::Event::MouseButtonPressed:
                     if (event.mouseButton.button == sf::Mouse::Left) {
