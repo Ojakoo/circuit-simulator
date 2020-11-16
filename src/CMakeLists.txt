@@ -1,4 +1,4 @@
-file(GLOB SOURCES "*.cpp")
+file(GLOB_RECURSE SOURCES "*.cpp")
 
 add_executable(main ${SOURCES})
 
