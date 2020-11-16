@@ -5,6 +5,7 @@
 #include "imgui.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
@@ -46,6 +47,12 @@ int main ( void ) {
     GUIInductor L1("L1");
     L1.setPosition(200, 200);
 
+    std::vector<GUIComponent> components;
+
+    components.push_back(R1);
+    components.push_back(C1);
+    components.push_back(L1);
+
     sf::Clock deltaClock;
 
     sf::Vector2f oldPos;
@@ -64,8 +71,6 @@ int main ( void ) {
                     break;
             
                 case sf::Event::Resized:
-                    // update the view to the new size of the window
-                    //window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
                     view.setSize(event.size.width, event.size.height);
                     view.zoom(zoom);
                     window.setView(view);
@@ -128,9 +133,11 @@ int main ( void ) {
         ImGui::SFML::Update(window, deltaClock.restart());
 
         window.clear(sf::Color(148, 143, 129));
-        window.draw(R1);
-        window.draw(C1);
-        window.draw(L1);
+        
+        // draw components
+        for ( auto it : components ) {
+            window.draw(it);
+        }
 
         ImGui::SFML::Render(window);
         window.display();
