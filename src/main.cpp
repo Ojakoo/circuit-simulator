@@ -132,6 +132,42 @@ int main ( void ) {
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Close")) {}
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Edit"))
+            {
+                if (ImGui::BeginMenu("Add component.."))
+                {
+                    if (ImGui::MenuItem("Resistor", "CTRL+R")) {}
+                    if (ImGui::MenuItem("Capacitor", "CTRL+C")) {}
+                    if (ImGui::MenuItem("Inductor", "CTRL+I")) {}
+                    if (ImGui::MenuItem("Voltage source", "CTRL+V")) {}
+                    if (ImGui::MenuItem("Current source", "CTRL+J")) {}
+                    ImGui::EndMenu();
+                }
+                if (ImGui::MenuItem("Rotate", "CTRL+R")) {}
+                if (ImGui::MenuItem("Move", "CTRL+M")) {}
+                if (ImGui::MenuItem("Delete", "CTRL+D")) {}
+                //ImGui::Separator();
+                //if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+                //if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+                //if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Simulate"))
+            {
+                if (ImGui::MenuItem("Steady state analysis")) {}
+                if (ImGui::MenuItem("Transient analysis")) {}
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+
         window.clear(sf::Color(148, 143, 129));
         
         // draw components
