@@ -4,7 +4,6 @@
 #include "imgui-SFML.h"
 #include "imgui.h"
 
-#include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
@@ -36,9 +35,7 @@ int main ( void ) {
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
-    sf::View SimView(sf::FloatRect(0, 0, 640.f, 480.f));
-
-    window.setView(SimView);
+    sf::View view(sf::FloatRect(0, 0, 640.f, 480.f));
 
     GUIResistor R1("R1");
     R1.setPosition(50, 50);
@@ -50,6 +47,11 @@ int main ( void ) {
     L1.setPosition(200, 200);
 
     sf::Clock deltaClock;
+
+    sf::Vector2f oldPos;
+    bool moving = false;
+    float zoom = 1;
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -57,32 +59,65 @@ int main ( void ) {
 
             switch ( event.type )
             {
-                // window closed
                 case sf::Event::Closed:
                     window.close();
                     break;
             
-                // catch the resize events
                 case sf::Event::Resized:
                     // update the view to the new size of the window
-                    window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+                    //window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
+                    view.setSize(event.size.width, event.size.height);
+                    view.zoom(zoom);
+                    window.setView(view);
                     break;
                 
-                // mouse pressed
                 case sf::Event::MouseButtonPressed:
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        // transform the mouse position from window coordinates to world coordinates
-                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-                        // retrieve the bounding box of the sprite
-                        sf::FloatRect bounds = R1.getGlobalBounds();
-
-                        // hit test
-                        if (bounds.contains(mouse))
-                        {
-                            std::cout << R1.GetName() << std::endl;
-                        }
+                        moving = true;
+                        oldPos = window.mapPixelToCoords(
+                            sf::Vector2i(event.mouseButton.x, event.mouseButton.y)
+                        );
                     }
+                    break;
+
+                case  sf::Event::MouseButtonReleased:
+                    if (event.mouseButton.button == sf::Mouse::Left) {
+                        moving = false;
+                    }
+                    break;
+
+                case sf::Event::MouseMoved:
+                    {
+                        if (!moving) break;
+                        
+                        const sf::Vector2f newPos = window.mapPixelToCoords(
+                            sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
+                        );
+
+                        const sf::Vector2f deltaPos = oldPos - newPos;
+
+                        view.setCenter(view.getCenter() + deltaPos);
+                        window.setView(view);
+
+                        oldPos = window.mapPixelToCoords(
+                            sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
+                        );
+                        break;
+                    }
+                case sf::Event::MouseWheelScrolled:
+                    if (moving) break;
+
+                    if (event.mouseWheelScroll.delta <= -1) {
+                        // Max zoom is 2.0
+                        zoom = std::min(2.f, zoom + .1f);
+                    } else if (event.mouseWheelScroll.delta >= 1) {
+                        // Min zoom is 0.5
+                        zoom = std::max(.5f, zoom - .1f);
+                    }
+
+                    view.setSize(window.getDefaultView().getSize());
+                    view.zoom(zoom);
+                    window.setView(view);
                     break;
 
                 default:
