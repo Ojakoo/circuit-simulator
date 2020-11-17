@@ -82,19 +82,6 @@ SCENARIO("Producing matrix") {
             THEN("Matrix is built right") {
                 CHECK(A.isApprox(Ref));
             }
-            std::shared_ptr<Node> n1 = c.AddNode("N001");
-            std::shared_ptr<Node> n2 = c.AddNode("N002");
-            std::shared_ptr<Node> n3 = c.AddNode("N003");
-
-            std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 50, n1, n2);
-            std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R2", 50, n2, n3);
-
-            c.AddComponent(r1);
-            c.AddComponent(r2);
-
-            THEN("There is 2 components in circuit") {
-                CHECK(c.GetComponents().size() == 2);
-            }
         }
     }
 }
