@@ -5,7 +5,7 @@
 #include "resistor.hpp"
 
 
-class GUIResistor : public GUIComponent, public Resistor {
+class GUIResistor : public GUIComponent {
     public:
         static const std::string RESISTOR_TEXTURE;
 

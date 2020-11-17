@@ -5,7 +5,7 @@
 #include "capacitor.hpp"
 
 
-class GUICapacitor : public GUIComponent, public Capacitor {
+class GUICapacitor : public GUIComponent {
     public:
         static const std::string CAPACITOR_TEXTURE;
 

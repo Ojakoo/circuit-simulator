@@ -5,7 +5,7 @@
 #include "inductor.hpp"
 
 
-class GUIInductor : public GUIComponent, public Inductor {
+class GUIInductor : public GUIComponent {
     public:
         static const std::string INDUCTOR_TEXTURE;
 
