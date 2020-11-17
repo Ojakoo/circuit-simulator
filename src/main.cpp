@@ -1,5 +1,7 @@
 #include <iostream>
 #include <complex>
+#include <math.h>
+#include <memory.h>
 
 #include "imgui-SFML.h"
 #include "imgui.h"
@@ -12,6 +14,7 @@
 #include "Eigen/Dense"
 
 // Include components
+#include "component.hpp"
 #include "circuit.hpp"
 #include "resistor.hpp"
 #include "inductor.hpp"
@@ -26,6 +29,8 @@
 #include "gui_components/gui_resistor.hpp"
 #include "gui_components/gui_capacitor.hpp"
 #include "gui_components/gui_inductor.hpp"
+
+#define GRID_SIZE 40
 
 typedef std::complex<float> cd;
 
@@ -59,6 +64,27 @@ int main ( void ) {
     bool moving = false;
     float zoom = 1;
 
+    sf::VertexArray lines(sf::Lines, 60);
+
+    int k = 0;
+
+    // vertical helper lines
+    for ( int i = 0; i <= 640; i+=GRID_SIZE, k+=2) {
+        lines[k].position = sf::Vector2f(i, 0);
+        lines[k].color = sf::Color(197, 206, 219);
+        lines[k + 1].position = sf::Vector2f(i, 480);
+        lines[k + 1].color = sf::Color(197, 206, 219);
+    }
+
+    //  horizontal helper lines
+    for ( int j = 0; j <= 480; j+=GRID_SIZE, k+=2 ) {
+        lines[k].position = sf::Vector2f(0, j);
+        lines[k].color = sf::Color(197, 206, 219);
+        lines[k + 1].position = sf::Vector2f(640, j);
+        lines[k + 1].color = sf::Color(197, 206, 219);
+    }
+    
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -77,11 +103,23 @@ int main ( void ) {
                     break;
                 
                 case sf::Event::MouseButtonPressed:
+
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        moving = true;
-                        oldPos = window.mapPixelToCoords(
-                            sf::Vector2i(event.mouseButton.x, event.mouseButton.y)
-                        );
+
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        bool clicked_component = false;
+                        for ( auto component : components ) {
+                            if (component.getGlobalBounds().contains(mouse)) {
+                                std::cout << component.GetName() << std::endl;
+                                clicked_component = true;
+                                break;
+                            }
+                        }
+                        if (!clicked_component) {
+                            moving = true;
+                            oldPos = mouse;
+                        }
                     }
                     break;
 
@@ -94,7 +132,7 @@ int main ( void ) {
                 case sf::Event::MouseMoved:
                     {
                         if (!moving) break;
-                        
+
                         const sf::Vector2f newPos = window.mapPixelToCoords(
                             sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
                         );
@@ -150,6 +188,7 @@ int main ( void ) {
                     if (ImGui::MenuItem("Current source", "CTRL+J")) {}
                     ImGui::EndMenu();
                 }
+                if (ImGui::MenuItem("Wire", "CTRL+W")) {}
                 if (ImGui::MenuItem("Rotate", "CTRL+R")) {}
                 if (ImGui::MenuItem("Move", "CTRL+M")) {}
                 if (ImGui::MenuItem("Delete", "CTRL+D")) {}
@@ -174,6 +213,8 @@ int main ( void ) {
         for ( auto it : components ) {
             window.draw(it);
         }
+
+        window.draw(lines);
 
         ImGui::SFML::Render(window);
         window.display();

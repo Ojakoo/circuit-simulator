@@ -9,5 +9,4 @@ GUIResistor::GUIResistor(const std::string& name,
                         std::shared_ptr<Node> input,
                         std::shared_ptr<Node> output,
                         const std::string& texture)
-    : GUIComponent(texture),
-      Resistor(name, resistance, input, output) { }
+    : GUIComponent(texture, std::make_shared<Resistor>(name, resistance, input, output)) { }
