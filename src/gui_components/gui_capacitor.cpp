@@ -9,5 +9,4 @@ GUICapacitor::GUICapacitor(const std::string& name,
                         std::shared_ptr<Node> input,
                         std::shared_ptr<Node> output,
                         const std::string& texture)
-    : GUIComponent(texture),
-      Capacitor(name, capacitance, input, output) { }
+    : GUIComponent(texture, std::make_shared<Capacitor>(name, capacitance, input, output)) { }

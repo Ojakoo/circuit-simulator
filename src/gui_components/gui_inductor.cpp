@@ -9,5 +9,4 @@ GUIInductor::GUIInductor(const std::string& name,
                         std::shared_ptr<Node> input,
                         std::shared_ptr<Node> output,
                         const std::string& texture)
-    : GUIComponent(texture),
-      Inductor(name, inductance, input, output) { }
+    : GUIComponent(texture, std::make_shared<Inductor>(name, inductance, input, output)) { }

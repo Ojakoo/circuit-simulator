@@ -1,6 +1,7 @@
 #include <iostream>
 #include <complex>
-#include <math.h> 
+#include <math.h>
+#include <memory.h>
 
 #include "imgui-SFML.h"
 #include "imgui.h"
@@ -13,6 +14,7 @@
 #include "Eigen/Dense"
 
 // Include components
+#include "component.hpp"
 #include "circuit.hpp"
 #include "resistor.hpp"
 #include "inductor.hpp"
@@ -101,11 +103,23 @@ int main ( void ) {
                     break;
                 
                 case sf::Event::MouseButtonPressed:
+
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        moving = true;
-                        oldPos = window.mapPixelToCoords(
-                            sf::Vector2i(event.mouseButton.x, event.mouseButton.y)
-                        );
+
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        bool clicked_component = false;
+                        for ( auto component : components ) {
+                            if (component.getGlobalBounds().contains(mouse)) {
+                                std::cout << component.GetName() << std::endl;
+                                clicked_component = true;
+                                break;
+                            }
+                        }
+                        if (!clicked_component) {
+                            moving = true;
+                            oldPos = mouse;
+                        }
                     }
                     break;
 
@@ -118,7 +132,7 @@ int main ( void ) {
                 case sf::Event::MouseMoved:
                     {
                         if (!moving) break;
-                        
+
                         const sf::Vector2f newPos = window.mapPixelToCoords(
                             sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
                         );
