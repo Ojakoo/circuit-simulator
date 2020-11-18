@@ -35,6 +35,15 @@
 typedef std::complex<float> cd;
 
 
+enum GUIAction {
+    NO_ACTION,
+    MOVING_COMPONENT,
+    ROTATING_COMPONENT,
+    DELETING_COMPONENT,
+    DRAWING_WIRE
+};
+
+
 int main ( void ) {
 
     sf::RenderWindow window(sf::VideoMode(640, 480), "Circuit Simulator");
@@ -61,7 +70,9 @@ int main ( void ) {
     sf::Clock deltaClock;
 
     sf::Vector2f oldPos;
-    bool moving = false;
+    bool movingView = false;
+    GUIAction action = NO_ACTION;
+    GUIComponent *movingComponent = nullptr;
     float zoom = 1;
 
     sf::VertexArray lines(sf::Lines, 60);
@@ -83,7 +94,6 @@ int main ( void ) {
         lines[k + 1].position = sf::Vector2f(640, j);
         lines[k + 1].color = sf::Color(197, 206, 219);
     }
-    
 
     while (window.isOpen()) {
         sf::Event event;
@@ -109,33 +119,63 @@ int main ( void ) {
                         sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                         bool clicked_component = false;
-                        for ( auto component : components ) {
-                            if (component.getGlobalBounds().contains(mouse)) {
-                                std::cout << component.GetName() << std::endl;
+                        for ( auto it = components.begin(); it != components.end(); it++ ) {
+                            if (it->getGlobalBounds().contains(mouse)) {
+                                switch ( action ) {
+                                    case MOVING_COMPONENT:
+                                        if (movingComponent) {
+                                            // already moving component
+                                            movingComponent = nullptr;
+                                        } else {
+                                            movingComponent = &(*it);
+                                        }
+                                        break;
+                                    case ROTATING_COMPONENT:
+                                        it->rotate(90);
+                                        break;
+                                    case DELETING_COMPONENT:
+                                        components.erase(it);
+                                        break;
+                                    default:
+                                        break;
+                                }
                                 clicked_component = true;
                                 break;
                             }
                         }
+                        if (movingComponent && !clicked_component) {
+                            // moving a component but mouse is not inside a sprite
+                            movingComponent = nullptr;
+                        }
                         if (!clicked_component) {
-                            moving = true;
+                            movingView = true;
                             oldPos = mouse;
                         }
+                    } else if (event.mouseButton.button == sf::Mouse::Right) {
+                        // cancel action
+                        action = NO_ACTION;
+                        movingComponent = nullptr;
                     }
                     break;
 
                 case  sf::Event::MouseButtonReleased:
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        moving = false;
+                        movingView = false;
                     }
                     break;
 
                 case sf::Event::MouseMoved:
                     {
-                        if (!moving) break;
-
                         const sf::Vector2f newPos = window.mapPixelToCoords(
                             sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
                         );
+
+                        if (!movingView) {
+                            if (movingComponent) {
+                                movingComponent->setPosition(newPos);
+                            }
+                            break;
+                        };
 
                         const sf::Vector2f deltaPos = oldPos - newPos;
 
@@ -148,7 +188,7 @@ int main ( void ) {
                         break;
                     }
                 case sf::Event::MouseWheelScrolled:
-                    if (moving) break;
+                    if (movingView) break;
 
                     if (event.mouseWheelScroll.delta <= -1) {
                         // Max zoom is 2.0
@@ -177,7 +217,9 @@ int main ( void ) {
                 if (ImGui::MenuItem("Open", "CTRL+O")) {}
                 if (ImGui::MenuItem("Save", "CTRL+S")) {}
                 ImGui::Separator();
-                if (ImGui::MenuItem("Close")) {}
+                if (ImGui::MenuItem("Close")) {
+                    window.close();
+                }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Edit"))
@@ -191,10 +233,18 @@ int main ( void ) {
                     if (ImGui::MenuItem("Current source", "CTRL+J")) {}
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Wire", "CTRL+W")) {}
-                if (ImGui::MenuItem("Rotate", "CTRL+R")) {}
-                if (ImGui::MenuItem("Move", "CTRL+M")) {}
-                if (ImGui::MenuItem("Delete", "CTRL+D")) {}
+                if (ImGui::MenuItem("Wire", "CTRL+W")) {
+                    action = DRAWING_WIRE;
+                }
+                if (ImGui::MenuItem("Rotate", "CTRL+R")) {
+                    action = ROTATING_COMPONENT;
+                }
+                if (ImGui::MenuItem("Move", "CTRL+M")) {
+                    action = MOVING_COMPONENT;
+                }
+                if (ImGui::MenuItem("Delete", "CTRL+D")) {
+                    action = DELETING_COMPONENT;
+                }
                 //ImGui::Separator();
                 //if (ImGui::MenuItem("Cut", "CTRL+X")) {}
                 //if (ImGui::MenuItem("Copy", "CTRL+C")) {}
