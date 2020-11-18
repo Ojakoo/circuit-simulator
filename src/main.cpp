@@ -1,6 +1,5 @@
 #include <iostream>
 #include <complex>
-#include <math.h>
 #include <memory.h>
 
 #include "imgui-SFML.h"
@@ -14,14 +13,7 @@
 #include "Eigen/Dense"
 
 // Include components
-#include "component.hpp"
-#include "circuit.hpp"
-#include "resistor.hpp"
-#include "inductor.hpp"
-#include "capacitor.hpp"
 #include "MNAsolver.hpp"
-#include "dc_voltage_source.hpp"
-#include "dc_current_source.hpp"
 #include "save_and_load.hpp"
 #include "save_and_load.hpp"
 
@@ -44,36 +36,33 @@ enum GUIAction {
     ADDING_COMPONENT
 };
 
+class TestWindow : public sf::RenderWindow {
+    public:
+        TestWindow(int width, int height, const std::string &title)
+            : sf::RenderWindow(sf::VideoMode(width, height), title) { }
+};
+
 
 int main ( void ) {
 
-    sf::RenderWindow window(sf::VideoMode(640, 480), "Circuit Simulator");
+    TestWindow window(640, 480, "Circuit Simulator");
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
+    int resistors = 0;
+    int inductors = 0;
+    int capacitors = 0;
+
     sf::View view(sf::FloatRect(0, 0, 640.f, 480.f));
 
-    GUIResistor R1("R1");
-    R1.setPosition(50, 50);
-
-    GUICapacitor C1("C1");
-    C1.setPosition(100, 100);
-
-    GUIInductor L1("L1");
-    L1.setPosition(200, 200);
-
-    std::vector<GUIComponent> components;
-
-    components.push_back(R1);
-    components.push_back(C1);
-    components.push_back(L1);
+    std::vector<std::shared_ptr<GUIComponent>> components;
 
     sf::Clock deltaClock;
 
     sf::Vector2f oldPos;
     bool movingView = false;  // is user moving/dragging view?
     GUIAction action = NO_ACTION;  // current action performed by user
-    GUIComponent *movingComponent = nullptr;  // pointer to component being moved
+    std::shared_ptr<GUIComponent> movingComponent= nullptr;  // pointer to component being moved
     GUIComponent *addingComponent = nullptr;  // pointer to component being added
     float zoom = 1;  // current zoom of view
 
@@ -115,25 +104,26 @@ int main ( void ) {
                     break;
                 
                 case sf::Event::MouseButtonPressed:
-
                     if (event.mouseButton.button == sf::Mouse::Left) {
 
-                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                        sf::Vector2f mouse = window.mapPixelToCoords(
+                            sf::Mouse::getPosition(window)
+                        );
 
                         bool clicked_component = false;
-                        for ( auto it = components.begin(); it != components.end(); it++ ) {
-                            if (it->getGlobalBounds().contains(mouse)) {
+                        for (auto it = components.begin(); it != components.end(); it++) {
+                            if ((*it)->getGlobalBounds().contains(mouse)) {
                                 switch ( action ) {
                                     case MOVING_COMPONENT:
                                         if (movingComponent) {
                                             // already moving component
                                             movingComponent = nullptr;
                                         } else {
-                                            movingComponent = &(*it);
+                                            movingComponent = *it;
                                         }
                                         break;
                                     case ROTATING_COMPONENT:
-                                        it->rotate(90);
+                                        (*it)->rotate(90);
                                         break;
                                     case DELETING_COMPONENT:
                                         components.erase(it);
@@ -145,12 +135,25 @@ int main ( void ) {
                                 break;
                             }
                         }
-                        /*
+                        
                         if (addingComponent) {
+                            switch ( addingComponent->GetType() ) {
+                                case RESISTOR:
+                                    resistors++;
+                                    break;
+                                case CAPACITOR:
+                                    capacitors++;
+                                    break;
+                                case INDUCTOR:
+                                    inductors++;
+                                    break;
+                                default:
+                                    break;
+                            }
                             addingComponent = nullptr;
                             action = NO_ACTION;
                         }
-                        */
+                        
                         if (movingComponent && !clicked_component) {
                             // moving a component but mouse is not inside a sprite
                             movingComponent = nullptr;
@@ -160,17 +163,17 @@ int main ( void ) {
                             oldPos = mouse;
                         }
                     } else if (event.mouseButton.button == sf::Mouse::Right) {
-                        // cancel action
+                        // cancel all actions
                         action = NO_ACTION;
                         movingComponent = nullptr;
-                        /*
-                        if (addingComponent) components.pop_back();
+                        if (addingComponent) {
+                            components.pop_back();
+                        }
                         addingComponent = nullptr;
-                        */
                     }
                     break;
 
-                case  sf::Event::MouseButtonReleased:
+                case sf::Event::MouseButtonReleased:
                     if (event.mouseButton.button == sf::Mouse::Left) {
                         movingView = false;
                     }
@@ -185,14 +188,10 @@ int main ( void ) {
                         if (!movingView) {
                             if (movingComponent)
                                 movingComponent->setPosition(newPos);
-                            /*
-                            } else if (addingComponent) {
-                                //std::cout << newPos.x << ", " << newPos.y << std::endl;
+                            
+                            if (addingComponent) {
                                 addingComponent->setPosition(newPos);
-                                const sf::Vector2f l = addingComponent->getPosition();
-                                std::cout << l.x << ", " << l.y << std::endl;
                             }
-                            */
                             break;
                         }
 
@@ -233,8 +232,8 @@ int main ( void ) {
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open", "CTRL+O")) {}
-                if (ImGui::MenuItem("Save", "CTRL+S")) {}
+                if (ImGui::MenuItem("Open", "CTRL+O", false, false)) {}
+                if (ImGui::MenuItem("Save", "CTRL+S", false, false)) {}
                 ImGui::Separator();
                 if (ImGui::MenuItem("Close")) {
                     window.close();
@@ -246,21 +245,31 @@ int main ( void ) {
                 if (ImGui::BeginMenu("Add component.."))
                 {
                     if (ImGui::MenuItem("Resistor", "CTRL+R")) {
-                        /*
-                        // ToDo: default naming for components
-                        GUIResistor R = GUIResistor("NO_NAME");
-                        components.push_back(R);
-                        addingComponent = &R;
+                        components.push_back(
+                            std::make_shared<GUIResistor>("R" + std::to_string(resistors))
+                        );
+                        addingComponent = &(*components.back());
                         action = ADDING_COMPONENT;
-                        */
                     }
-                    if (ImGui::MenuItem("Capacitor", "CTRL+C")) {}
-                    if (ImGui::MenuItem("Inductor", "CTRL+I")) {}
-                    if (ImGui::MenuItem("Voltage source", "CTRL+V")) {}
-                    if (ImGui::MenuItem("Current source", "CTRL+J")) {}
+                    if (ImGui::MenuItem("Capacitor", "CTRL+C")) {
+                        components.push_back(
+                            std::make_shared<GUICapacitor>("C" + std::to_string(capacitors))
+                        );
+                        addingComponent = &(*components.back());
+                        action = ADDING_COMPONENT;
+                    }
+                    if (ImGui::MenuItem("Inductor", "CTRL+I")) {
+                        components.push_back(
+                            std::make_shared<GUIInductor>("L" + std::to_string(inductors))
+                        );
+                        addingComponent = &(*components.back());
+                        action = ADDING_COMPONENT;
+                    }
+                    if (ImGui::MenuItem("Voltage source", "CTRL+V", false, false)) {}
+                    if (ImGui::MenuItem("Current source", "CTRL+J", false, false)) {}
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Wire", "CTRL+W")) {
+                if (ImGui::MenuItem("Wire", "CTRL+W", false, false)) {
                     action = DRAWING_WIRE;
                 }
                 if (ImGui::MenuItem("Rotate", "CTRL+R")) {
@@ -272,16 +281,12 @@ int main ( void ) {
                 if (ImGui::MenuItem("Delete", "CTRL+D")) {
                     action = DELETING_COMPONENT;
                 }
-                //ImGui::Separator();
-                //if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-                //if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-                //if (ImGui::MenuItem("Paste", "CTRL+V")) {}
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Simulate"))
             {
-                if (ImGui::MenuItem("Steady state analysis")) {}
-                if (ImGui::MenuItem("Transient analysis")) {}
+                if (ImGui::MenuItem("Steady state analysis", NULL, false, false)) {}
+                if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
@@ -292,7 +297,7 @@ int main ( void ) {
         // draw components
 
         for ( auto it : components ) {
-            window.draw(it);
+            window.draw(*it);
         }
 
         window.draw(lines);
