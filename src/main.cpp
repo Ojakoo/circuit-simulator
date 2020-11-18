@@ -40,7 +40,8 @@ enum GUIAction {
     MOVING_COMPONENT,
     ROTATING_COMPONENT,
     DELETING_COMPONENT,
-    DRAWING_WIRE
+    DRAWING_WIRE,
+    ADDING_COMPONENT
 };
 
 
@@ -70,10 +71,11 @@ int main ( void ) {
     sf::Clock deltaClock;
 
     sf::Vector2f oldPos;
-    bool movingView = false;
-    GUIAction action = NO_ACTION;
-    GUIComponent *movingComponent = nullptr;
-    float zoom = 1;
+    bool movingView = false;  // is user moving/dragging view?
+    GUIAction action = NO_ACTION;  // current action performed by user
+    GUIComponent *movingComponent = nullptr;  // pointer to component being moved
+    GUIComponent *addingComponent = nullptr;  // pointer to component being added
+    float zoom = 1;  // current zoom of view
 
     sf::VertexArray lines(sf::Lines, 60);
 
@@ -143,6 +145,12 @@ int main ( void ) {
                                 break;
                             }
                         }
+                        /*
+                        if (addingComponent) {
+                            addingComponent = nullptr;
+                            action = NO_ACTION;
+                        }
+                        */
                         if (movingComponent && !clicked_component) {
                             // moving a component but mouse is not inside a sprite
                             movingComponent = nullptr;
@@ -155,6 +163,10 @@ int main ( void ) {
                         // cancel action
                         action = NO_ACTION;
                         movingComponent = nullptr;
+                        /*
+                        if (addingComponent) components.pop_back();
+                        addingComponent = nullptr;
+                        */
                     }
                     break;
 
@@ -171,11 +183,18 @@ int main ( void ) {
                         );
 
                         if (!movingView) {
-                            if (movingComponent) {
+                            if (movingComponent)
                                 movingComponent->setPosition(newPos);
+                            /*
+                            } else if (addingComponent) {
+                                //std::cout << newPos.x << ", " << newPos.y << std::endl;
+                                addingComponent->setPosition(newPos);
+                                const sf::Vector2f l = addingComponent->getPosition();
+                                std::cout << l.x << ", " << l.y << std::endl;
                             }
+                            */
                             break;
-                        };
+                        }
 
                         const sf::Vector2f deltaPos = oldPos - newPos;
 
@@ -226,7 +245,15 @@ int main ( void ) {
             {
                 if (ImGui::BeginMenu("Add component.."))
                 {
-                    if (ImGui::MenuItem("Resistor", "CTRL+R")) {}
+                    if (ImGui::MenuItem("Resistor", "CTRL+R")) {
+                        /*
+                        // ToDo: default naming for components
+                        GUIResistor R = GUIResistor("NO_NAME");
+                        components.push_back(R);
+                        addingComponent = &R;
+                        action = ADDING_COMPONENT;
+                        */
+                    }
                     if (ImGui::MenuItem("Capacitor", "CTRL+C")) {}
                     if (ImGui::MenuItem("Inductor", "CTRL+I")) {}
                     if (ImGui::MenuItem("Voltage source", "CTRL+V")) {}
@@ -263,6 +290,7 @@ int main ( void ) {
         window.clear(sf::Color(148, 143, 129));
         
         // draw components
+
         for ( auto it : components ) {
             window.draw(it);
         }
