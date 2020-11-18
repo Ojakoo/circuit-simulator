@@ -174,6 +174,9 @@ int main ( void ) {
         {
             if (ImGui::BeginMenu("File"))
             {
+                if (ImGui::MenuItem("Open", "CTRL+O")) {}
+                if (ImGui::MenuItem("Save", "CTRL+S")) {}
+                ImGui::Separator();
                 if (ImGui::MenuItem("Close")) {}
                 ImGui::EndMenu();
             }
