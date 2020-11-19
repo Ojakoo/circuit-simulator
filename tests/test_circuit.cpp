@@ -15,9 +15,11 @@
 typedef std::complex<float> cd;
 
 SCENARIO("Constructing circuit") {
-    GIVEN("juu"){
-        WHEN("jaa") {
-            Circuit c = Circuit();
+    GIVEN("An empty circuit") {
+
+        Circuit c = Circuit();
+
+        WHEN("Two components are added") {
 
             std::shared_ptr<Node> n1 = c.AddNode("N001");
             std::shared_ptr<Node> n2 = c.AddNode("N002");
@@ -36,8 +38,8 @@ SCENARIO("Constructing circuit") {
     }
 }
 
-SCENARIO("Producing matrix") {
-    GIVEN("CIrcuit with resistors") {
+SCENARIO("Producing A and z matrix from circuit with resistors") {
+    GIVEN("A circuit with resistors") {
         Circuit c = Circuit();
 
         std::shared_ptr<Node> n1 = c.AddNode("N001");
@@ -48,6 +50,7 @@ SCENARIO("Producing matrix") {
         std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 0.5, n1, g);
         std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R2", 0.5, n2, g);
         std::shared_ptr<Resistor> r3 = std::make_shared<Resistor>("R3", 0.5, n2, n3);
+
         std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 6, n1, n2);
         std::shared_ptr<DCCurrentSource> s2 = std::make_shared<DCCurrentSource>("S2", 2, n3, n1);
         std::shared_ptr<DCCurrentSource> s3 = std::make_shared<DCCurrentSource>("S3", 4, g, n3);
@@ -59,28 +62,38 @@ SCENARIO("Producing matrix") {
         c.AddComponent(s2);
         c.AddComponent(s3);
 
-        WHEN("") {
+        Eigen::Matrix4cf RefA;
 
-            Eigen::Matrix4cf Ref;
+        RefA << cd(2,0),  cd(0,0),  cd(0,0),  cd(-1,0),
+                cd(0,0),  cd(4,0),  cd(-2,0), cd(1,0),
+                cd(0,0),  cd(-2,0), cd(2,0),  cd(0,0),
+                cd(-1,0), cd(1,0),  cd(0,0),  cd(0,0);
 
-            Ref << cd(2,0), cd(0,0), cd(0,0), cd(0,0),
-            cd(0,0), cd(4,0), cd(-2,0), cd(0,0),
-            cd(0,0), cd(-2,0), cd(2,0), cd(0,0),
-            cd(0,0), cd(0,0), cd(0,0), cd(0,0);
+        Eigen::Vector4f Refz;
 
-            THEN("There is 4 components in circuit") {
+        Refz << 2, 0, 2, 6;
+
+        WHEN("Matricies are constructed") {
+
+            THEN("There is 6 components in circuit") {
                 CHECK(c.GetComponents().size() == 6);
             }
 
-            const Eigen::MatrixXcf A = c.sMatrix();
+            c.ConstructMatrices();
 
-            THEN("Matrix is right size") {
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("Matricies are the right size") {
                 CHECK(A.rows() == 4);
                 CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
+                CHECK(z.cols() == 1);
             }
 
             THEN("Matrix is built right") {
-                CHECK(A.isApprox(Ref));
+                CHECK(z.isApprox(Refz));
+                CHECK(A.isApprox(RefA));
             }
         }
     }
