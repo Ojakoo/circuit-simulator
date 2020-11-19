@@ -50,14 +50,16 @@ void Circuit::ConstructMatrices() {
                         );  // Y = 1 / Z = 1 / R
                         break;
                     case CAPACITOR:
-                        admittance = std::complex<float>(
-                            0, component->GetValue() * omega
-                        );  // Y = 1 / Z = j*w*C
+                        if (omega)
+                            admittance = std::complex<float>(
+                                0, component->GetValue() * omega
+                            );  // Y = 1 / Z = j*w*C
                         break;
                     case INDUCTOR:
-                        admittance = std::complex<float>(
-                            0, 1 / (component->GetValue() * omega)
-                        );  // Y = 1 / Z = 1 / (j*w*L)
+                        if (omega)
+                            admittance = std::complex<float>(
+                                0, 1 / (component->GetValue() * omega)
+                            );  // Y = 1 / Z = 1 / (j*w*L)
                         break;
                     default:
                         break;

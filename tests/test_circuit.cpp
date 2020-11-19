@@ -10,6 +10,7 @@
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
 #include "node.hpp"
+#include "save_and_load.hpp"
 #include "Eigen/Dense"
 
 typedef std::complex<float> cd;
@@ -99,27 +100,83 @@ SCENARIO("Producing A and z matrix from circuit with resistors") {
     }
 }
 
-SCENARIO("Producing matrix") {
-    GIVEN("hmm") {
-        WHEN("dfsahj") {
-            Circuit c = Circuit();
+SCENARIO("Producing matricies from circuit that is read from file") {
+    GIVEN("a good file to read") {
+        const std::string fname = "../../tests/netlists/netlist_good.txt";
 
-            std::shared_ptr<Node> n1 = c.AddNode("N001");
-            std::shared_ptr<Node> n2 = c.AddNode("N002");
-            std::shared_ptr<Node> g = c.AddNode("0");
+        WHEN("the the file  is read") {
 
-            std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 50, n1, n2);
-            std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 1, n2, g);
-            std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 2, n2, g);
-            std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 10, n1, g);
+            Circuit c = LoadNetList(fname);
 
-            c.AddComponent(r1);
-            c.AddComponent(c1);
-            c.AddComponent(l1);
-            c.AddComponent(s1);
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+    
+            THEN("There is 4 components in circuit") {
+                CHECK(c.GetComponents().size() == 4);
+            }
+
+            THEN("Matricies are the right size") {
+                CHECK(A.rows() == 3);
+                CHECK(A.cols() == 3);
+                CHECK(z.rows() == 3);
+                CHECK(z.cols() == 1);
+            }
+
+            THEN("Matricies are are built correctly") {
+                Matrix3cf m;
+                m << cd(0.1, 0), cd(-0.1, 0), cd(1.0, 0),
+                     cd(-0.1, 0), cd(0.1, 0), cd(0.0, 0),
+                     cd(1.0, 0), cd(0.0, 0), cd(0.0, 0);
+                Vector3f e(0, 0, 5);
+                CHECK(z.isApprox(e));
+                CHECK(A.isApprox(m));
+            }
+        }
+    }
+}
+
+SCENARIO("Testing matrix construction when component is not connected") {
+    GIVEN("A circuit with a voltage source and unconnected resistor") {
+        Circuit c = Circuit();
+
+        std::shared_ptr<Node> n1 = c.AddNode("N001");
+        std::shared_ptr<Node> g = c.AddNode("0");
+
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 0.5);
+        r1->ConnectNodeToTerminal(n1, INPUT);
+
+        std::shared_ptr<DCVoltageSource> V1 = std::make_shared<DCVoltageSource>("S1", 6, g, n1);
+        
+        c.AddComponent(r1);
+        c.AddComponent(V1);
+
+        WHEN("Matricies are constructed") {
+
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
 
             THEN("There is 2 components in circuit") {
-                CHECK(c.GetComponents().size() == 4);
+                CHECK(c.GetComponents().size() == 2);
+            }
+
+            THEN("Matricies are the right size") {
+                CHECK(A.rows() == 2);
+                CHECK(A.cols() == 2);
+                CHECK(z.rows() == 2);
+                CHECK(z.cols() == 1);
+            }
+
+            THEN("Matricies are are built correctly") {
+                Matrix2cf m;
+                m << cd(0, 0), cd(1, 0),
+                     cd(1, 0),   cd(0 , 0);
+                Vector2f e(0, 6);
+                CHECK(z.isApprox(e));
+                CHECK(A.isApprox(m));
             }
         }
     }
