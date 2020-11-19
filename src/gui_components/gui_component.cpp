@@ -15,3 +15,7 @@ GUIComponent::GUIComponent(const std::string& texture, std::shared_ptr<Component
 const std::string GUIComponent::GetName() const {
     return component_->GetName();
 }
+
+const ComponentType GUIComponent::GetType() const {
+    return component_->GetType();
+}
