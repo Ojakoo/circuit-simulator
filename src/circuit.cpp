@@ -5,8 +5,9 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
     return components_;
 }
 
-const MatrixXcf Circuit::sMatrix() const{
-    //generate index map based on node map_
+const MatrixXcf Circuit::AMatrix(float omega) const {
+
+    //generate index map based on nodes
     std::map<std::string, int> indexes;
 
     int node_count = 0;
@@ -18,32 +19,83 @@ const MatrixXcf Circuit::sMatrix() const{
         }
     }
 
-    int voltage_source_count;
-    int current_source_count;
+    MatrixXcf A = MatrixXcf::Zero(n_ + m_, n_ + m_);  // initialize A matrix
 
-    MatrixXcf A = MatrixXcf::Zero(n_+m_,n_+m_);
+    for ( auto const& component : components_ ) {
 
-    for ( auto const& i : components_ ) {
-        ComponentType type = i->GetType();
-        std::shared_ptr<Node> out = i->GetTerminalNode(OUTPUT);
-        std::shared_ptr<Node> in = i->GetTerminalNode(INPUT);
+        std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
+        std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
 
-        if (type == RESISTOR) {
-            std::string out_name = out->GetName();
-            std::string in_name = in->GetName();
+        if (out == nullptr || in == nullptr) continue;  // other node is not connected
 
-            if ( out->GetType() != GROUND ) {
-                A( indexes[out_name], indexes[out_name] ) += ( 1/( i->GetValue() ));
-            }
-            if ( in->GetType() != GROUND ) {
-                A( indexes[in_name], indexes[in_name] ) += ( 1/( i->GetValue() ));
-            }
-            if ( in->GetType() != GROUND && out->GetType() != GROUND ) {
-                A( indexes[out_name], indexes[in_name] ) += ( -1/( i->GetValue() ));
-                A( indexes[in_name], indexes[out_name] ) += ( -1/( i->GetValue() ));
-            }
-        } else if (type == DC_VOLTAGE_SOURCE) {
-            
+        ComponentType type = component->GetType();
+        ComponentClass cls = component->GetClass();
+
+        std::string out_name = out->GetName();
+        std::string in_name = in->GetName();
+
+        std::complex<float> admittance;
+
+        switch ( cls ) {
+            case PASSIVE:
+                /*
+                Construct G submatrix.
+                */
+                switch ( type ) {
+                    case RESISTOR:
+                        admittance = std::complex<float>(
+                            1 / component->GetValue(), 0
+                        );  // Y = 1 / Z = 1 / R
+                        break;
+                    case CAPACITOR:
+                        admittance = std::complex<float>(
+                            0, component->GetValue() * omega
+                        );  // Y = 1 / Z = j*w*C
+                        break;
+                    case INDUCTOR:
+                        admittance = std::complex<float>(
+                            0, 1 / (component->GetValue() * omega)
+                        );  // Y = 1 / Z = 1 / (j*w*L)
+                        break;
+                    default:
+                        break;
+                }
+
+                if ( in->GetType() != GROUND && out->GetType() != GROUND ) {
+                    // component is between two nodes
+                    A( indexes[out_name], indexes[in_name] ) += -admittance;
+                    A( indexes[in_name], indexes[out_name] ) += -admittance;
+                }
+                if ( out->GetType() != GROUND ) {
+                    // output terminal is connected to some node
+                    A( indexes[out_name], indexes[out_name] ) += admittance;
+                }
+                if ( in->GetType() != GROUND ) {
+                    // input terminal is connected to some node
+                    A( indexes[in_name], indexes[in_name] ) += admittance;
+                }
+                break;
+            case ACTIVE:
+                /*
+                Construct B and C submatrix.
+                */
+                switch ( type ) {
+                    case DC_VOLTAGE_SOURCE:
+                    if ( out->GetType() != GROUND ) {
+                        // output terminal is connected to some node
+                        A(n_, indexes[out_name]) = 1;  // append value to B submatrix
+                        A(indexes[out_name], n_) = 1;  // append value to C submatrix
+                    }
+                    if ( in->GetType() != GROUND ) {
+                        // input terminal is connected to some node
+                        A(n_, indexes[in_name]) = -1;  // append value to B submatrix
+                        A(indexes[in_name], n_) = -1;  // append value to C submatrix
+                    }
+                        break;
+                    default:
+                        break;
+                }
+                break;
         }
     }
 
