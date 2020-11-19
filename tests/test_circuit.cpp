@@ -38,7 +38,7 @@ SCENARIO("Constructing circuit") {
     }
 }
 
-SCENARIO("Producing A matrix from circuit with resistors") {
+SCENARIO("Producing A and z matrix from circuit with resistors") {
     GIVEN("A circuit with resistors") {
         Circuit c = Circuit();
 
@@ -62,29 +62,38 @@ SCENARIO("Producing A matrix from circuit with resistors") {
         c.AddComponent(s2);
         c.AddComponent(s3);
 
-        WHEN("") {
+        Eigen::Matrix4cf RefA;
 
-            Eigen::Matrix4cf Ref;
+        RefA << cd(2,0),  cd(0,0),  cd(0,0),  cd(-1,0),
+                cd(0,0),  cd(4,0),  cd(-2,0), cd(1,0),
+                cd(0,0),  cd(-2,0), cd(2,0),  cd(0,0),
+                cd(-1,0), cd(1,0),  cd(0,0),  cd(0,0);
 
-            Ref << cd(2,0),  cd(0,0),  cd(0,0),  cd(-1,0),
-                   cd(0,0),  cd(4,0),  cd(-2,0), cd(1,0),
-                   cd(0,0),  cd(-2,0), cd(2,0),  cd(0,0),
-                   cd(-1,0), cd(1,0),  cd(0,0),  cd(0,0);
+        Eigen::Vector4f Refz;
+
+        Refz << 2, 0, 2, 6;
+
+        WHEN("Matricies are constructed") {
 
             THEN("There is 6 components in circuit") {
                 CHECK(c.GetComponents().size() == 6);
             }
 
-            const Eigen::MatrixXcf A = c.AMatrix();
+            c.ConstructMatrices();
 
-            THEN("Matrix is right size") {
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("Matricies are the right size") {
                 CHECK(A.rows() == 4);
                 CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
+                CHECK(z.cols() == 1);
             }
 
             THEN("Matrix is built right") {
-                std::cout << A << std::endl;
-                CHECK(A.isApprox(Ref));
+                CHECK(z.isApprox(Refz));
+                CHECK(A.isApprox(RefA));
             }
         }
     }

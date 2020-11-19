@@ -5,21 +5,23 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
     return components_;
 }
 
-const MatrixXcf Circuit::AMatrix(float omega) const {
-
+void Circuit::ConstructMatrices() {
     //generate index map based on nodes
-    std::map<std::string, int> indexes;
-
+    node_indexes_.clear();
     int node_count = 0;
+    int v_sources = 0;
+
+    int omega = 0.0;  // DC circuit
 
     for ( auto const& i : nodes_ ) {
         if ( i.second->GetType() != GROUND ) {
-            indexes[ i.first ] = node_count;
+            node_indexes_[ i.first ] = node_count;
             node_count++;
         }
     }
 
-    MatrixXcf A = MatrixXcf::Zero(n_ + m_, n_ + m_);  // initialize A matrix
+    A_ = MatrixXcf::Zero(n_ + m_, n_ + m_);  // initialize A matrix
+    z_ = VectorXf::Zero(m_ + n_);  // initialize z vector
 
     for ( auto const& component : components_ ) {
 
@@ -63,34 +65,45 @@ const MatrixXcf Circuit::AMatrix(float omega) const {
 
                 if ( in->GetType() != GROUND && out->GetType() != GROUND ) {
                     // component is between two nodes
-                    A( indexes[out_name], indexes[in_name] ) += -admittance;
-                    A( indexes[in_name], indexes[out_name] ) += -admittance;
+                    A_( node_indexes_[out_name], node_indexes_[in_name] ) += -admittance;
+                    A_( node_indexes_[in_name], node_indexes_[out_name] ) += -admittance;
                 }
                 if ( out->GetType() != GROUND ) {
                     // output terminal is connected to some node
-                    A( indexes[out_name], indexes[out_name] ) += admittance;
+                    A_( node_indexes_[out_name], node_indexes_[out_name] ) += admittance;
                 }
                 if ( in->GetType() != GROUND ) {
                     // input terminal is connected to some node
-                    A( indexes[in_name], indexes[in_name] ) += admittance;
+                    A_( node_indexes_[in_name], node_indexes_[in_name] ) += admittance;
                 }
                 break;
             case ACTIVE:
                 /*
-                Construct B and C submatrix.
+                Construct B and C submatrices and z vector.
                 */
                 switch ( type ) {
                     case DC_VOLTAGE_SOURCE:
-                    if ( out->GetType() != GROUND ) {
-                        // output terminal is connected to some node
-                        A(n_, indexes[out_name]) = 1;  // append value to B submatrix
-                        A(indexes[out_name], n_) = 1;  // append value to C submatrix
-                    }
-                    if ( in->GetType() != GROUND ) {
-                        // input terminal is connected to some node
-                        A(n_, indexes[in_name]) = -1;  // append value to B submatrix
-                        A(indexes[in_name], n_) = -1;  // append value to C submatrix
-                    }
+                        if ( out->GetType() != GROUND ) {
+                            // output terminal is connected to some node
+                            A_(n_, node_indexes_[out_name]) = 1;  // append value to B submatrix
+                            A_(node_indexes_[out_name], n_) = 1;  // append value to C submatrix
+                        }
+                        if ( in->GetType() != GROUND ) {
+                            // input terminal is connected to some node
+                            A_(n_, node_indexes_[in_name]) = -1;  // append value to B submatrix
+                            A_(node_indexes_[in_name], n_) = -1;  // append value to C submatrix
+                        }
+                        v_source_indexes[v_sources] = component;
+                        z_(n_ + v_sources) = component->GetValue();
+                        v_sources++;
+                        break;
+                    case DC_CURRENT_SOURCE:
+                        if ( out->GetType() != GROUND ) {
+                            z_(node_indexes_[out_name]) += component->GetValue();
+                        }
+                        if ( in->GetType() != GROUND ) {
+                            z_(node_indexes_[in_name]) += -component->GetValue();
+                        }
                         break;
                     default:
                         break;
@@ -98,8 +111,14 @@ const MatrixXcf Circuit::AMatrix(float omega) const {
                 break;
         }
     }
+}
 
-    return A;
+const MatrixXcf Circuit::GetAMatrix() const {
+    return A_;
+}
+
+const VectorXf Circuit::GetZMatrix() const {
+    return z_;
 }
 
 const int Circuit::GetNodeCount() const {
