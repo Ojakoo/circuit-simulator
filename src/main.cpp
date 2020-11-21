@@ -21,6 +21,9 @@
 #include "gui_components/gui_resistor.hpp"
 #include "gui_components/gui_capacitor.hpp"
 #include "gui_components/gui_inductor.hpp"
+#include "gui_components/gui_voltage_source.hpp"
+
+#include "circuit.hpp"
 
 #define GRID_SIZE 40
 
@@ -49,13 +52,16 @@ int main ( void ) {
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
+    Circuit circuit;
+
     int resistors = 0;
     int inductors = 0;
     int capacitors = 0;
+    int sources = 0;
 
     sf::View view(sf::FloatRect(0, 0, 640.f, 480.f));
 
-    std::vector<std::shared_ptr<GUIComponent>> components;
+    std::list<std::shared_ptr<GUIComponent>> components;
 
     sf::Clock deltaClock;
 
@@ -85,6 +91,10 @@ int main ( void ) {
         lines[k + 1].position = sf::Vector2f(640, j);
         lines[k + 1].color = sf::Color(197, 206, 219);
     }
+
+    std::shared_ptr<GUIInductor>  L1= std::make_shared<GUIInductor>("L1");
+    circuit.AddComponent(L1->GetComponent());
+    components.push_back(L1);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -126,6 +136,7 @@ int main ( void ) {
                                         (*it)->rotate(90);
                                         break;
                                     case DELETING_COMPONENT:
+                                        circuit.RemoveComponent((*it)->GetComponent());
                                         components.erase(it);
                                         break;
                                     default:
@@ -150,6 +161,7 @@ int main ( void ) {
                                 default:
                                     break;
                             }
+                            circuit.AddComponent(addingComponent->GetComponent());
                             addingComponent = nullptr;
                             action = NO_ACTION;
                         }
@@ -265,7 +277,13 @@ int main ( void ) {
                         addingComponent = &(*components.back());
                         action = ADDING_COMPONENT;
                     }
-                    if (ImGui::MenuItem("Voltage source", "CTRL+V", false, false)) {}
+                    if (ImGui::MenuItem("Voltage source", "CTRL+V")) {
+                        components.push_back(
+                            std::make_shared<GUIVoltageSource>("V" + std::to_string(sources))
+                        );
+                        addingComponent = &(*components.back());
+                        action = ADDING_COMPONENT;
+                    }
                     if (ImGui::MenuItem("Current source", "CTRL+J", false, false)) {}
                     ImGui::EndMenu();
                 }
@@ -285,7 +303,9 @@ int main ( void ) {
             }
             if (ImGui::BeginMenu("Simulate"))
             {
-                if (ImGui::MenuItem("Steady state analysis", NULL, false, false)) {}
+                if (ImGui::MenuItem("Steady state analysis")) {
+                    std::cout << circuit << std::endl;
+                }
                 if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
                 ImGui::EndMenu();
             }

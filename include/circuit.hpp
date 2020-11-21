@@ -23,6 +23,7 @@ public:
     void ConstructMatrices();
     const MatrixXcf GetAMatrix() const;
     const VectorXf GetZMatrix() const;
+    void RemoveComponent(std::shared_ptr<Component> component);
 private:
     int i_ = 0; // number of sources
     int n_ = 0; // number of nodes (excluding ground node)

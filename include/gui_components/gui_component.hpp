@@ -20,6 +20,8 @@ class GUIComponent : public sf::Sprite {
 
         const ComponentType GetType() const;
 
+        const std::shared_ptr<Component> GetComponent() const;
+
     private:
         sf::Texture tx_;  // holds pointer for texture
         std::shared_ptr<Component> component_;

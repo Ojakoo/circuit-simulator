@@ -19,3 +19,7 @@ const std::string GUIComponent::GetName() const {
 const ComponentType GUIComponent::GetType() const {
     return component_->GetType();
 }
+
+const std::shared_ptr<Component> GUIComponent::GetComponent() const {
+    return component_;
+}
