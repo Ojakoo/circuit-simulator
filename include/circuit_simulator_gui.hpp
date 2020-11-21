@@ -1,25 +1,17 @@
 #pragma once
 
 #include <iostream>
-#include <complex>
-#include <memory.h>
 
 #include "imgui-SFML.h"
 #include "imgui.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "Eigen/Dense"
-
-// Include components
-#include "MNAsolver.hpp"
 #include "save_and_load.hpp"
 #include "save_and_load.hpp"
 
-// Include GUI components
 #include "gui_components/gui_resistor.hpp"
 #include "gui_components/gui_capacitor.hpp"
 #include "gui_components/gui_inductor.hpp"
@@ -46,6 +38,12 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         ~CircuitSimulatorGUI() = default;
         
         void main_loop();
+
+        void ProcessEvents();
+
+        void RenderMenuBar();
+
+        void DrawComponents();
     
     private:
         Circuit circuit_;
