@@ -5,6 +5,10 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
     return components_;
 }
 
+void Circuit::RemoveComponent(std::shared_ptr<Component> component) {
+    components_.remove(component);
+}
+
 void Circuit::ConstructMatrices() {
     //generate index map based on nodes
     node_indexes_.clear();

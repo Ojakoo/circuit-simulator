@@ -50,6 +50,20 @@ make
 make test
 ```
 
+How to run individual test for more accurate details:
+
+```
+cd circuit-sim-2020-2
+mkdir build
+cd build
+cmake ..
+make
+cd tests
+./circuit
+./load_file
+./save_file
+```
+
 Remove everything from build folder:
 
 ```
