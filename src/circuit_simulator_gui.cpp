@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "circuit_simulator_gui.hpp"
 
 
@@ -7,6 +9,44 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
                 ImGui::SFML::Init(*this);
             }
 
+
+TerminalType CircuitSimulatorGUI::DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const {
+    TerminalType terminal;
+    if (rot == 90 || rot == 270) {  // components rotation is vertical
+        const float top = bounds.top;
+        const float bottom = top + bounds.height;
+        if (rot == 90) {  // rotation is 90 degrees
+            if ( abs(mouse.y - top) > abs(mouse.y - bottom) ) {
+                terminal = OUTPUT;
+            } else {
+                terminal = INPUT;
+            }
+        } else {  // rotation is 270 degrees
+            if ( abs(mouse.y - top) > abs(mouse.y - bottom) ) {
+                terminal = INPUT;
+            } else {
+                terminal = OUTPUT;
+            }
+        }
+    } else { // components rotation is horizontal
+        const float left = bounds.left;
+        const float right = left + bounds.width;
+        if ( rot == 0) {  // rotation is 0 degrees
+            if ( abs(mouse.x - left) > abs(mouse.x - right) ) {
+                terminal = OUTPUT;
+            } else {
+                terminal = INPUT;
+            }
+        } else {  // rotation is 180 degrees
+            if ( abs(mouse.x - left) > abs(mouse.x - right) ) {
+                terminal = INPUT;
+            } else {
+                terminal = OUTPUT;
+            }
+        }
+    }
+    return terminal;
+}
 
 void CircuitSimulatorGUI::ProcessEvents() {
     sf::Event event;
@@ -34,7 +74,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
 
                     bool clicked_component = false;
                     for (auto it = components_.begin(); it != components_.end(); it++) {
-                        if ((*it)->getGlobalBounds().contains(mouse)) {
+                        const sf::FloatRect bounds = (*it)->getGlobalBounds();
+                        if (bounds.contains(mouse)) {
                             switch ( action_ ) {
                                 case MOVING_COMPONENT:
                                     if (movingComponent_) {
@@ -55,10 +96,30 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     break;
                             }
                             clicked_component = true;
+                            TerminalType terminal = DetermineTerminal(bounds, int((*it)->getRotation()), mouse);
+                            std::cout << (*it)->GetName() << ", Clicked terminal: ";
+                            switch ( terminal ) {
+                                case INPUT:
+                                    std::cout << "INPUT";
+                                    break;
+                                case OUTPUT:
+                                    std::cout << "OUTPUT";
+                                    break;
+                                default:
+                                    break;
+                            }
+                            std::cout << std::endl;
                             break;
+                            
                         }
                     }
-                    
+
+                    if (addingWire_) {
+                        addingWire_->resize(addingWire_->getVertexCount() + 1);
+                        (*addingWire_)[addingWire_->getVertexCount() - 1].position = sf::Vector2f(mouse.x, mouse.y);
+                        (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
+                    }
+
                     if (addingComponent_) {
                         switch ( addingComponent_->GetType() ) {
                             case RESISTOR:
@@ -90,10 +151,15 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     // cancel all actions
                     action_ = NO_ACTION;
                     movingComponent_ = nullptr;
-                    if (addingComponent_) {
+                    if (addingComponent_) {  // Remove the component being added
                         components_.pop_back();
                     }
                     addingComponent_ = nullptr;
+
+                    if (addingWire_) {  // Remove the wire being added
+                        wires_.pop_back();
+                    }
+                    addingWire_ = nullptr;
                 }
                 break;
 
@@ -115,6 +181,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         
                         if (addingComponent_) {
                             addingComponent_->setPosition(newPos);
+                        }
+                        if (addingWire_) {
+                            (*addingWire_)[addingWire_->getVertexCount() - 1].position = newPos;
                         }
                         break;
                     }
@@ -169,47 +238,52 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         {
             if (ImGui::BeginMenu("Add component.."))
             {
-                if (ImGui::MenuItem("Resistor", "CTRL+R")) {
+                if (ImGui::MenuItem("Resistor", "R")) {
                     components_.push_back(
                         std::make_shared<GUIResistor>("R" + std::to_string(resistors_))
                     );
-                    addingComponent_ = &(*components_.back());
+                    addingComponent_ = components_.back();
                     action_ = ADDING_COMPONENT;
                 }
-                if (ImGui::MenuItem("Capacitor", "CTRL+C")) {
+                if (ImGui::MenuItem("Capacitor", "C")) {
                     components_.push_back(
                         std::make_shared<GUICapacitor>("C" + std::to_string(capacitors_))
                     );
-                    addingComponent_ = &(*components_.back());
+                    addingComponent_ = components_.back();
                     action_ = ADDING_COMPONENT;
                 }
-                if (ImGui::MenuItem("Inductor", "CTRL+I")) {
+                if (ImGui::MenuItem("Inductor", "L")) {
                     components_.push_back(
                         std::make_shared<GUIInductor>("L" + std::to_string(inductors_))
                     );
-                    addingComponent_ = &(*components_.back());
+                    addingComponent_ = components_.back();
                     action_ = ADDING_COMPONENT;
                 }
-                if (ImGui::MenuItem("Voltage source", "CTRL+V")) {
+                if (ImGui::MenuItem("Voltage source", "V")) {
                     components_.push_back(
                         std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                     );
-                    addingComponent_ = &(*components_.back());
+                    addingComponent_ = components_.back();
                     action_ = ADDING_COMPONENT;
                 }
-                if (ImGui::MenuItem("Current source", "CTRL+J", false, false)) {}
+                if (ImGui::MenuItem("Current source", "J", false, false)) {}
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Wire", "CTRL+W", false, false)) {
+            if (ImGui::MenuItem("Wire", "W")) {
+                wires_.push_back(
+                    std::make_shared<GUIWire>()
+                );
+                addingWire_ = wires_.back();
+                (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
                 action_ = DRAWING_WIRE;
             }
-            if (ImGui::MenuItem("Rotate", "CTRL+R")) {
+            if (ImGui::MenuItem("Rotate", "R")) {
                 action_ = ROTATING_COMPONENT;
             }
-            if (ImGui::MenuItem("Move", "CTRL+M")) {
+            if (ImGui::MenuItem("Move", "M")) {
                 action_ = MOVING_COMPONENT;
             }
-            if (ImGui::MenuItem("Delete", "CTRL+D")) {
+            if (ImGui::MenuItem("Delete", "D")) {
                 action_ = DELETING_COMPONENT;
             }
             ImGui::EndMenu();
@@ -221,6 +295,27 @@ void CircuitSimulatorGUI::RenderMenuBar() {
             }
             if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
             ImGui::EndMenu();
+        }
+        ImGui::SameLine(ImGui::GetWindowWidth() - 150);
+
+        switch ( action_) {
+            case MOVING_COMPONENT:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Moving component");
+                break;
+            case DELETING_COMPONENT:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Deleting component");
+                break;
+            case ADDING_COMPONENT:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Adding component");
+                break;
+            case ROTATING_COMPONENT:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Rotating component");
+                break;
+            case DRAWING_WIRE:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Drawing wire");
+                break;
+            default:
+                break;
         }
         ImGui::EndMainMenuBar();
     }
@@ -235,7 +330,10 @@ void CircuitSimulatorGUI::DrawComponents() {
         draw(*it);
     }
 
-    //draw(lines);
+    // draw wires
+    for (auto it : wires_) {
+        draw(*it);
+    }
 }
 
 
