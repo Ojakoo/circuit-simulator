@@ -7,6 +7,25 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
             : sf::RenderWindow(sf::VideoMode(width, height), title) { 
                 this->setFramerateLimit(60);
                 ImGui::SFML::Init(*this);
+                lines = sf::VertexArray(sf::Lines, 60);
+
+                int k = 0;
+
+                // vertical helper lines
+                for ( int i = 0; i <= 640; i+=GRID_SIZE, k+=2) {
+                    lines[k].position = sf::Vector2f(i, 0);
+                    lines[k].color = sf::Color(197, 206, 219);
+                    lines[k + 1].position = sf::Vector2f(i, 480);
+                    lines[k + 1].color = sf::Color(197, 206, 219);
+                }
+
+                //  horizontal helper lines
+                for ( int j = 0; j <= 480; j+=GRID_SIZE, k+=2 ) {
+                    lines[k].position = sf::Vector2f(0, j);
+                    lines[k].color = sf::Color(197, 206, 219);
+                    lines[k + 1].position = sf::Vector2f(640, j);
+                    lines[k + 1].color = sf::Color(197, 206, 219);
+                }
             }
 
 
@@ -115,9 +134,10 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     }
 
                     if (addingWire_) {
-                        addingWire_->resize(addingWire_->getVertexCount() + 1);
-                        (*addingWire_)[addingWire_->getVertexCount() - 1].position = sf::Vector2f(mouse.x, mouse.y);
-                        (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
+                        int count = addingWire_->getVertexCount();
+                        addingWire_->resize(count + 1);
+                        (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
+                        (*addingWire_)[count].color = sf::Color(0, 0, 0);
                     }
 
                     if (addingComponent_) {
@@ -175,23 +195,25 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
                     );
 
+                    const sf::Vector2f deltaPos = oldPos_ - newPos;
+
                     if (!movingView_) {
-                        if (movingComponent_)
-                            movingComponent_->setPosition(newPos);
-                        
+                        if (movingComponent_) {
+                            movingComponent_->move(-deltaPos);
+                        }
                         if (addingComponent_) {
-                            addingComponent_->setPosition(newPos);
+                            const sf::FloatRect bounds = addingComponent_->getGlobalBounds();
+                            addingComponent_->setPosition(newPos - sf::Vector2f(bounds.width/2, bounds.height/2));
                         }
                         if (addingWire_) {
                             (*addingWire_)[addingWire_->getVertexCount() - 1].position = newPos;
                         }
-                        break;
+                        
+                    } else {
+                        // moving view
+                        view_.setCenter(view_.getCenter() + deltaPos);
+                        setView(view_);
                     }
-
-                    const sf::Vector2f deltaPos = oldPos_ - newPos;
-
-                    view_.setCenter(view_.getCenter() + deltaPos);
-                    setView(view_);
 
                     oldPos_ = mapPixelToCoords(
                         sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
@@ -274,7 +296,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                     std::make_shared<GUIWire>()
                 );
                 addingWire_ = wires_.back();
-                (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
+                (*addingWire_)[0].color = sf::Color(0, 0, 0);
                 action_ = DRAWING_WIRE;
             }
             if (ImGui::MenuItem("Rotate", "R")) {
@@ -334,6 +356,8 @@ void CircuitSimulatorGUI::DrawComponents() {
     for (auto it : wires_) {
         draw(*it);
     }
+
+    draw(lines);
 }
 
 

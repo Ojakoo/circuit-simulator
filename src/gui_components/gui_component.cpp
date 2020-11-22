@@ -4,12 +4,12 @@
 GUIComponent::GUIComponent(const std::string& texture, std::shared_ptr<Component> component)
     : sf::Sprite() {
         // set texture
-        this->tx_ = sf::Texture();
-        this->tx_.loadFromFile(texture);
-        this->setTexture(this->tx_);
+        tx_ = sf::Texture();
+        tx_.loadFromFile(texture);
+        setTexture(tx_);
 
         // set component
-        this->component_ = component;
+        component_ = component;
      }
 
 const std::string GUIComponent::GetName() const {

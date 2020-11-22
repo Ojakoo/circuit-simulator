@@ -65,4 +65,6 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
+
+        sf::VertexArray lines;
 };
