@@ -16,6 +16,7 @@
 #include "gui_components/gui_capacitor.hpp"
 #include "gui_components/gui_inductor.hpp"
 #include "gui_components/gui_voltage_source.hpp"
+#include "gui_components/gui_wire.hpp"
 
 #include "circuit.hpp"
 
@@ -44,6 +45,8 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         void RenderMenuBar();
 
         void DrawComponents();
+
+        TerminalType DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
     
     private:
         Circuit circuit_;
@@ -54,10 +57,12 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         sf::Clock deltaClock_;
         sf::View view_ = sf::View(sf::FloatRect(0, 0, 640.f, 480.f));
         std::list<std::shared_ptr<GUIComponent>> components_;
+        std::list<std::shared_ptr<GUIWire>> wires_;
         sf::Vector2f oldPos_;
         bool movingView_ = false;  // is user moving/dragging view?
         GUIAction action_ = NO_ACTION;  // current action performed by user
         std::shared_ptr<GUIComponent> movingComponent_ = nullptr;  // pointer to component being moved
-        GUIComponent *addingComponent_ = nullptr;  // pointer to component being added
+        std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
+        std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
 };
