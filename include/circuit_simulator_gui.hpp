@@ -46,6 +46,8 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
 
         void DrawComponents();
 
+        void AddingComponent(std::shared_ptr<GUIComponent> component);
+
         TerminalType DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
     
     private:
@@ -65,4 +67,6 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
+
+        sf::VertexArray lines;
 };

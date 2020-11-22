@@ -3,10 +3,53 @@
 #include "circuit_simulator_gui.hpp"
 
 
+sf::Vector2i MapCoordsToClosest(sf::Vector2i coords) {
+    int offset_x = int(coords.x) % GRID_SIZE;
+    if (offset_x > (GRID_SIZE / 2))
+        coords.x += GRID_SIZE - offset_x;
+    else
+        coords.x -= offset_x;
+
+    int offset_y = int(coords.y) % GRID_SIZE;
+    if (offset_y > (GRID_SIZE / 2))
+        coords.y += GRID_SIZE - offset_y;
+    else
+        coords.y -= offset_y;
+    return coords;
+}
+
+
+void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> component) {
+    components_.push_back(component);
+    addingComponent_ = component;
+    movingComponent_ = component;
+    action_ = ADDING_COMPONENT;
+}
+
+
 CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string &title)
             : sf::RenderWindow(sf::VideoMode(width, height), title) { 
                 this->setFramerateLimit(60);
                 ImGui::SFML::Init(*this);
+                lines = sf::VertexArray(sf::Lines, 60);
+
+                int k = 0;
+
+                // vertical helper lines
+                for ( int i = 0; i <= 640; i+=GRID_SIZE, k+=2) {
+                    lines[k].position = sf::Vector2f(i, 0);
+                    lines[k].color = sf::Color(197, 206, 219);
+                    lines[k + 1].position = sf::Vector2f(i, 480);
+                    lines[k + 1].color = sf::Color(197, 206, 219);
+                }
+
+                //  horizontal helper lines
+                for ( int j = 0; j <= 480; j+=GRID_SIZE, k+=2 ) {
+                    lines[k].position = sf::Vector2f(0, j);
+                    lines[k].color = sf::Color(197, 206, 219);
+                    lines[k + 1].position = sf::Vector2f(640, j);
+                    lines[k + 1].color = sf::Color(197, 206, 219);
+                }
             }
 
 
@@ -96,6 +139,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     break;
                             }
                             clicked_component = true;
+                            /*
                             TerminalType terminal = DetermineTerminal(bounds, int((*it)->getRotation()), mouse);
                             std::cout << (*it)->GetName() << ", Clicked terminal: ";
                             switch ( terminal ) {
@@ -109,15 +153,17 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     break;
                             }
                             std::cout << std::endl;
+                            */
                             break;
                             
                         }
                     }
 
                     if (addingWire_) {
-                        addingWire_->resize(addingWire_->getVertexCount() + 1);
-                        (*addingWire_)[addingWire_->getVertexCount() - 1].position = sf::Vector2f(mouse.x, mouse.y);
-                        (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
+                        int count = addingWire_->getVertexCount();
+                        addingWire_->resize(count + 1);
+                        (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
+                        (*addingWire_)[count].color = sf::Color(0, 0, 0);
                     }
 
                     if (addingComponent_) {
@@ -136,6 +182,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                         circuit_.AddComponent(addingComponent_->GetComponent());
                         addingComponent_ = nullptr;
+                        movingComponent_ = nullptr;
                         action_ = NO_ACTION;
                     }
                     
@@ -175,23 +222,23 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
                     );
 
+                    const sf::Vector2f deltaPos = oldPos_ - newPos;
+
+                    sf::Vector2i closest = MapCoordsToClosest(sf::Vector2i(int(newPos.x), int(newPos.y)));
+
                     if (!movingView_) {
-                        if (movingComponent_)
-                            movingComponent_->setPosition(newPos);
-                        
-                        if (addingComponent_) {
-                            addingComponent_->setPosition(newPos);
+                        if (movingComponent_) {
+                            movingComponent_->setPosition(closest.x, closest.y);
                         }
                         if (addingWire_) {
                             (*addingWire_)[addingWire_->getVertexCount() - 1].position = newPos;
                         }
-                        break;
+                        
+                    } else {
+                        // moving view
+                        view_.setCenter(view_.getCenter() + deltaPos);
+                        setView(view_);
                     }
-
-                    const sf::Vector2f deltaPos = oldPos_ - newPos;
-
-                    view_.setCenter(view_.getCenter() + deltaPos);
-                    setView(view_);
 
                     oldPos_ = mapPixelToCoords(
                         sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
@@ -239,32 +286,24 @@ void CircuitSimulatorGUI::RenderMenuBar() {
             if (ImGui::BeginMenu("Add component.."))
             {
                 if (ImGui::MenuItem("Resistor", "R")) {
-                    components_.push_back(
+                    AddingComponent(
                         std::make_shared<GUIResistor>("R" + std::to_string(resistors_))
                     );
-                    addingComponent_ = components_.back();
-                    action_ = ADDING_COMPONENT;
                 }
                 if (ImGui::MenuItem("Capacitor", "C")) {
-                    components_.push_back(
+                    AddingComponent(
                         std::make_shared<GUICapacitor>("C" + std::to_string(capacitors_))
                     );
-                    addingComponent_ = components_.back();
-                    action_ = ADDING_COMPONENT;
                 }
                 if (ImGui::MenuItem("Inductor", "L")) {
-                    components_.push_back(
+                    AddingComponent(
                         std::make_shared<GUIInductor>("L" + std::to_string(inductors_))
                     );
-                    addingComponent_ = components_.back();
-                    action_ = ADDING_COMPONENT;
                 }
                 if (ImGui::MenuItem("Voltage source", "V")) {
-                    components_.push_back(
+                    AddingComponent(
                         std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                     );
-                    addingComponent_ = components_.back();
-                    action_ = ADDING_COMPONENT;
                 }
                 if (ImGui::MenuItem("Current source", "J", false, false)) {}
                 ImGui::EndMenu();
@@ -274,7 +313,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                     std::make_shared<GUIWire>()
                 );
                 addingWire_ = wires_.back();
-                (*addingWire_)[addingWire_->getVertexCount() - 1].color = sf::Color(0, 0, 0);
+                (*addingWire_)[0].color = sf::Color(0, 0, 0);
                 action_ = DRAWING_WIRE;
             }
             if (ImGui::MenuItem("Rotate", "R")) {
@@ -334,6 +373,8 @@ void CircuitSimulatorGUI::DrawComponents() {
     for (auto it : wires_) {
         draw(*it);
     }
+
+    draw(lines);
 }
 
 
