@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "ImGuiFileBrowser.h"
+
 #include "circuit_simulator_gui.hpp"
 
 
@@ -326,12 +328,17 @@ void CircuitSimulatorGUI::ProcessEvents() {
 
 
 void CircuitSimulatorGUI::RenderMenuBar() {
+    bool open = false, save = false;
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open", "CTRL+O", false, false)) {}
-            if (ImGui::MenuItem("Save", "CTRL+S", false, false)) {}
+            if (ImGui::MenuItem("Open", "CTRL+O")) {
+                open = true;
+            }
+            if (ImGui::MenuItem("Save", "CTRL+S")) {
+                save = true;
+            }
             ImGui::Separator();
             if (ImGui::MenuItem("Close")) {
                 close();
@@ -420,6 +427,27 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 break;
         }
         ImGui::EndMainMenuBar();
+    }
+    //Remember the name to ImGui::OpenPopup() and showFileDialog() must be same...
+    if(open)
+        ImGui::OpenPopup("Open File");
+    if(save)
+        ImGui::OpenPopup("Save File");
+        
+    /* Optional third parameter. Support opening only compressed rar/zip files. 
+     * Opening any other file will show error, return false and won't close the dialog.
+     */
+    if(file_dialog_.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), ".txt"))
+    {
+        std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+        std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
+    }
+    if(file_dialog_.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), ".txt"))
+    {
+        std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+        std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
+        std::cout << file_dialog_.ext << std::endl;              // Access ext separately (For SAVE mode)
+        //Do writing of files based on extension here
     }
 }
 
