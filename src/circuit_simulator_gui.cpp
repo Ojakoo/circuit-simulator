@@ -27,6 +27,25 @@ void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> componen
     action_ = ADDING_COMPONENT;
 }
 
+void CircuitSimulatorGUI::CancelAllActions() {
+    action_ = NO_ACTION;
+    movingComponent_ = nullptr;
+    if (addingComponent_) {  // Remove the component being added
+        components_.pop_back();
+    }
+    addingComponent_ = nullptr;
+
+    if (addingWire_) {
+        if (addingWire_->getVertexCount() == 2) {
+            // Remove the wire being added if it is too short
+            wires_.pop_back();
+        } else {
+            addingWire_->resize(addingWire_->getVertexCount() - 1);
+        }
+    }
+    addingWire_ = nullptr;
+}
+
 
 CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string &title)
             : sf::RenderWindow(sf::VideoMode(width, height), title) { 
@@ -223,22 +242,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         oldPos_ = mouse;
                     }
                 } else if (event.mouseButton.button == sf::Mouse::Right) {
-                    // cancel all actions
-                    action_ = NO_ACTION;
-                    movingComponent_ = nullptr;
-                    if (addingComponent_) {  // Remove the component being added
-                        components_.pop_back();
-                    }
-                    addingComponent_ = nullptr;
-
-                    if (addingWire_) {  // Remove the wire being added
-                        if (addingWire_->getVertexCount() == 2) {
-                            wires_.pop_back();
-                        } else {
-                            addingWire_->resize(addingWire_->getVertexCount() - 1);
-                        }
-                    }
-                    addingWire_ = nullptr;
+                    CancelAllActions();
                 }
                 break;
 
@@ -291,6 +295,27 @@ void CircuitSimulatorGUI::ProcessEvents() {
                 view_.setSize(getDefaultView().getSize());
                 view_.zoom(zoom_);
                 setView(view_);
+                break;
+
+            case sf::Event::KeyPressed:
+                if (event.key.code == sf::Keyboard::M) {  // Move
+                    action_ = MOVING_COMPONENT;
+                } else if (event.key.code == sf::Keyboard::F) {  // Rotate or flip
+                    action_ = ROTATING_COMPONENT;
+                } else if (event.key.code == sf::Keyboard::D) {
+                    action_ = DELETING_ELEMENT;
+                } else if (event.key.code == sf::Keyboard::W) {
+                    if (!addingWire_ && action_ != DRAWING_WIRE) {
+                        wires_.push_back(
+                            std::make_shared<GUIWire>()
+                        );
+                        addingWire_ = wires_.back();
+                        (*addingWire_)[0].color = sf::Color(0, 0, 0);
+                        action_ = DRAWING_WIRE;
+                    }
+                } else if (event.key.code == sf::Keyboard::Escape) {
+                    CancelAllActions();
+                }
                 break;
 
             default:
@@ -348,7 +373,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 (*addingWire_)[0].color = sf::Color(0, 0, 0);
                 action_ = DRAWING_WIRE;
             }
-            if (ImGui::MenuItem("Rotate", "R")) {
+            if (ImGui::MenuItem("Flip", "F")) {
                 action_ = ROTATING_COMPONENT;
             }
             if (ImGui::MenuItem("Move", "M")) {

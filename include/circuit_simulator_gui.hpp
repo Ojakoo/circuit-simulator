@@ -48,6 +48,8 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
 
         void AddingComponent(std::shared_ptr<GUIComponent> component);
 
+        void CancelAllActions();
+
         TerminalType DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
     
     private:
