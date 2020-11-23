@@ -5,6 +5,8 @@
 #include "imgui-SFML.h"
 #include "imgui.h"
 
+#include "ImGuiFileBrowser.h"
+
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
@@ -70,5 +72,6 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
         sf::Cursor cursor_;
+        imgui_addons::ImGuiFileBrowser file_dialog_; // As a class member or globally
         sf::VertexArray lines;
 };
