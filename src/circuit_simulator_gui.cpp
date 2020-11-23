@@ -139,6 +139,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     bool clicked_component = false;
                     for (auto it = components_.begin(); it != components_.end(); it++) {
                         const sf::FloatRect bounds = (*it)->getGlobalBounds();
+                        const sf::FloatRect localBounds = (*it)->getLocalBounds();
                         if (bounds.contains(mouse)) {
                             switch ( action_ ) {
                                 case MOVING_COMPONENT:
@@ -150,6 +151,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     }
                                     break;
                                 case ROTATING_COMPONENT:
+                                    (*it)->setOrigin(localBounds.width/2, localBounds.height/2);
                                     (*it)->rotate(90);
                                     break;
                                 case DELETING_ELEMENT:
