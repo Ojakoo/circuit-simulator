@@ -160,7 +160,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             
                         }
                     }
-                    if ( action_ == DELETING_ELEMENT ) {
+                    if ( action_ == DELETING_ELEMENT  && !clicked_component) {
+                        bool closeToWire = false;
                         for (auto it = wires_.begin(); it != wires_.end(); it++) {
                             if ((*it)->getBounds().contains(mouse)) {  // Proceed if mouse is relatively close to the wire
                                 for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
@@ -174,11 +175,14 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                         / std::sqrt(std::pow(P_2.position.x - P_1.position.x, 2) + std::pow(P_2.position.y - P_1.position.y, 2))
                                     );
                                     if (abs(d) <= 10) {
-                                        // Hit wire
-                                        wires_.erase(it);
+                                        closeToWire = true;
                                         break;
                                     }
                                 }
+                            }
+                            if (closeToWire) {
+                                wires_.erase(it);
+                                break;
                             }
                         }
                     }
