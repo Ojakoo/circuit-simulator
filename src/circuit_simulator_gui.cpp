@@ -1,18 +1,19 @@
 #include <stdlib.h>
+#include <math.h>
 
 #include "circuit_simulator_gui.hpp"
 
 
-sf::Vector2i MapCoordsToClosest(sf::Vector2i coords) {
-    int offset_x = int(coords.x) % GRID_SIZE;
-    if (offset_x > (GRID_SIZE / 2))
-        coords.x += GRID_SIZE - offset_x;
+sf::Vector2i MapCoordsToClosest(sf::Vector2i coords, int grid_size) {
+    int offset_x = int(coords.x) % grid_size;
+    if (offset_x > (grid_size / 2))
+        coords.x += grid_size - offset_x;
     else
         coords.x -= offset_x;
 
-    int offset_y = int(coords.y) % GRID_SIZE;
-    if (offset_y > (GRID_SIZE / 2))
-        coords.y += GRID_SIZE - offset_y;
+    int offset_y = int(coords.y) % grid_size;
+    if (offset_y > (grid_size / 2))
+        coords.y += grid_size - offset_y;
     else
         coords.y -= offset_y;
     return coords;
@@ -31,12 +32,13 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
             : sf::RenderWindow(sf::VideoMode(width, height), title) { 
                 this->setFramerateLimit(60);
                 ImGui::SFML::Init(*this);
-                lines = sf::VertexArray(sf::Lines, 60);
+                lines = sf::VertexArray(sf::Lines, 200);
 
+                // FOR DEBUGGING
                 int k = 0;
 
                 // vertical helper lines
-                for ( int i = 0; i <= 640; i+=GRID_SIZE, k+=2) {
+                for ( int i = 0; i <= 640; i+=WIRE_GRID_SIZE, k+=2) {
                     lines[k].position = sf::Vector2f(i, 0);
                     lines[k].color = sf::Color(197, 206, 219);
                     lines[k + 1].position = sf::Vector2f(i, 480);
@@ -44,7 +46,7 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
                 }
 
                 //  horizontal helper lines
-                for ( int j = 0; j <= 480; j+=GRID_SIZE, k+=2 ) {
+                for ( int j = 0; j <= 480; j+=WIRE_GRID_SIZE, k+=2 ) {
                     lines[k].position = sf::Vector2f(0, j);
                     lines[k].color = sf::Color(197, 206, 219);
                     lines[k + 1].position = sf::Vector2f(640, j);
@@ -131,7 +133,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 case ROTATING_COMPONENT:
                                     (*it)->rotate(90);
                                     break;
-                                case DELETING_COMPONENT:
+                                case DELETING_ELEMENT:
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
                                     break;
@@ -156,6 +158,28 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             */
                             break;
                             
+                        }
+                    }
+                    if ( action_ == DELETING_ELEMENT ) {
+                        for (auto it = wires_.begin(); it != wires_.end(); it++) {
+                            if ((*it)->getBounds().contains(mouse)) {  // Proceed if mouse is relatively close to the wire
+                                for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
+                                    sf::Vertex P_1 = (*(*it))[i];
+                                    sf::Vertex P_2 = (*(*it))[i + 1];
+                                    // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+                                    float d = (
+                                        abs((P_2.position.y - P_1.position.y) * mouse.x -
+                                            (P_2.position.x - P_1.position.x) * mouse.y +
+                                             P_2.position.x * P_1.position.y - P_2.position.y * P_1.position.x)
+                                        / std::sqrt(std::pow(P_2.position.x - P_1.position.x, 2) + std::pow(P_2.position.y - P_1.position.y, 2))
+                                    );
+                                    if (abs(d) <= 10) {
+                                        // Hit wire
+                                        wires_.erase(it);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -204,7 +228,11 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     addingComponent_ = nullptr;
 
                     if (addingWire_) {  // Remove the wire being added
-                        wires_.pop_back();
+                        if (addingWire_->getVertexCount() == 2) {
+                            wires_.pop_back();
+                        } else {
+                            addingWire_->resize(addingWire_->getVertexCount() - 1);
+                        }
                     }
                     addingWire_ = nullptr;
                 }
@@ -224,14 +252,14 @@ void CircuitSimulatorGUI::ProcessEvents() {
 
                     const sf::Vector2f deltaPos = oldPos_ - newPos;
 
-                    sf::Vector2i closest = MapCoordsToClosest(sf::Vector2i(int(newPos.x), int(newPos.y)));
-
                     if (!movingView_) {
                         if (movingComponent_) {
+                            sf::Vector2i closest = MapCoordsToClosest(sf::Vector2i(int(newPos.x), int(newPos.y)), COMPONENT_GRID_SIZE);
                             movingComponent_->setPosition(closest.x, closest.y);
                         }
                         if (addingWire_) {
-                            (*addingWire_)[addingWire_->getVertexCount() - 1].position = newPos;
+                            sf::Vector2i closest = MapCoordsToClosest(sf::Vector2i(int(newPos.x), int(newPos.y)), WIRE_GRID_SIZE);
+                            (*addingWire_)[addingWire_->getVertexCount() - 1].position = sf::Vector2f(closest.x, closest.y);
                         }
                         
                     } else {
@@ -323,7 +351,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 action_ = MOVING_COMPONENT;
             }
             if (ImGui::MenuItem("Delete", "D")) {
-                action_ = DELETING_COMPONENT;
+                action_ = DELETING_ELEMENT;
             }
             ImGui::EndMenu();
         }
@@ -340,18 +368,24 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         switch ( action_) {
             case MOVING_COMPONENT:
                 ImGui::TextColored(ImVec4(1,1,0,1), "Moving component");
+                cursor_.loadFromSystem(sf::Cursor::Hand);
+                setMouseCursor(cursor_);
                 break;
-            case DELETING_COMPONENT:
-                ImGui::TextColored(ImVec4(1,1,0,1), "Deleting component");
+            case DELETING_ELEMENT:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Deleting elements");
                 break;
             case ADDING_COMPONENT:
                 ImGui::TextColored(ImVec4(1,1,0,1), "Adding component");
                 break;
             case ROTATING_COMPONENT:
                 ImGui::TextColored(ImVec4(1,1,0,1), "Rotating component");
+                cursor_.loadFromSystem(sf::Cursor::Hand);
+                setMouseCursor(cursor_);
                 break;
             case DRAWING_WIRE:
                 ImGui::TextColored(ImVec4(1,1,0,1), "Drawing wire");
+                cursor_.loadFromSystem(sf::Cursor::Cross);
+                setMouseCursor(cursor_);
                 break;
             default:
                 break;
@@ -374,7 +408,7 @@ void CircuitSimulatorGUI::DrawComponents() {
         draw(*it);
     }
 
-    draw(lines);
+    // draw(lines);
 }
 
 

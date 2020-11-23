@@ -20,14 +20,14 @@
 
 #include "circuit.hpp"
 
-#define GRID_SIZE 40
-
+#define COMPONENT_GRID_SIZE 40
+#define WIRE_GRID_SIZE 20
 
 enum GUIAction {
     NO_ACTION,
     MOVING_COMPONENT,
     ROTATING_COMPONENT,
-    DELETING_COMPONENT,
+    DELETING_ELEMENT,
     DRAWING_WIRE,
     ADDING_COMPONENT
 };
@@ -67,6 +67,6 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
-
+        sf::Cursor cursor_;
         sf::VertexArray lines;
 };
