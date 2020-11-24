@@ -22,8 +22,7 @@
 
 #include "circuit.hpp"
 
-#define COMPONENT_GRID_SIZE 40
-#define WIRE_GRID_SIZE 20
+#define GRID_SIZE 20
 
 enum GUIAction {
     NO_ACTION,

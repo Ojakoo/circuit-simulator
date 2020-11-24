@@ -10,6 +10,7 @@ GUIComponent::GUIComponent(const std::string& texture, std::shared_ptr<Component
 
         // set component
         component_ = component;
+        setOrigin(getLocalBounds().width/2, getLocalBounds().height/2);
      }
 
 const std::string GUIComponent::GetName() const {
