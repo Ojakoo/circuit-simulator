@@ -459,6 +459,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw components
     for ( auto it : components_ ) {
         draw(*it);
+        it->DrawName(*this);
     }
 
     // draw wires
@@ -466,7 +467,7 @@ void CircuitSimulatorGUI::DrawComponents() {
         draw(*it);
     }
 
-    draw(lines);
+    // draw(lines);
 }
 
 

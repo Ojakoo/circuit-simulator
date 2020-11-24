@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
 #include "component.hpp"
+
 
 class GUIComponent : public sf::Sprite {
     
@@ -21,6 +23,8 @@ class GUIComponent : public sf::Sprite {
         const ComponentType GetType() const;
 
         const std::shared_ptr<Component> GetComponent() const;
+
+        void DrawName(sf::RenderWindow &window) const;
 
     private:
         sf::Texture tx_;  // holds pointer for texture
