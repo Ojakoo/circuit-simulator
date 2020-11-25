@@ -22,8 +22,7 @@
 
 #include "circuit.hpp"
 
-#define COMPONENT_GRID_SIZE 40
-#define WIRE_GRID_SIZE 20
+#define GRID_SIZE 20
 
 enum GUIAction {
     NO_ACTION,
@@ -53,6 +52,8 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         void CancelAllActions();
 
         TerminalType DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
+
+        void UpdateHelperLines(sf::Vector2i closest);
     
     private:
         Circuit circuit_;
@@ -72,6 +73,7 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
         sf::Cursor cursor_;
-        imgui_addons::ImGuiFileBrowser file_dialog_; // As a class member or globally
+        sf::VertexArray helper_lines_ = sf::VertexArray(sf::Lines, 4);
+        imgui_addons::ImGuiFileBrowser file_dialog_;
         sf::VertexArray lines;
 };
