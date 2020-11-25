@@ -57,6 +57,15 @@ void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
 }
 
 
+void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
+    std::cout << file << std::endl;
+}
+
+void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
+    std::cout << file << std::endl;
+}
+
+
 CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string &title)
             : sf::RenderWindow(sf::VideoMode(width, height), title) { 
                 this->setFramerateLimit(60);
@@ -89,22 +98,31 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
             }
 
 
-TerminalType CircuitSimulatorGUI::DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const {
+std::pair<TerminalType, sf::Vector2f> CircuitSimulatorGUI::TerminalClick(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const {
     TerminalType terminal;
+    sf::Vector2f coords;
     if (rot == 90 || rot == 270) {  // components rotation is vertical
         const float top = bounds.top;
         const float bottom = top + bounds.height;
         if (rot == 90) {  // rotation is 90 degrees
             if ( abs(mouse.y - top) > abs(mouse.y - bottom) ) {
                 terminal = OUTPUT;
+                coords.x = bounds.left + bounds.width / 2;
+                coords.y = bottom;
             } else {
                 terminal = INPUT;
+                coords.x = bounds.left + bounds.width / 2;
+                coords.y = top;
             }
         } else {  // rotation is 270 degrees
             if ( abs(mouse.y - top) > abs(mouse.y - bottom) ) {
                 terminal = INPUT;
+                coords.x = bounds.left + bounds.width / 2;
+                coords.y = bottom;
             } else {
                 terminal = OUTPUT;
+                coords.x = bounds.left + bounds.width / 2;
+                coords.y = top;
             }
         }
     } else { // components rotation is horizontal
@@ -113,18 +131,26 @@ TerminalType CircuitSimulatorGUI::DetermineTerminal(const sf::FloatRect bounds, 
         if ( rot == 0) {  // rotation is 0 degrees
             if ( abs(mouse.x - left) > abs(mouse.x - right) ) {
                 terminal = OUTPUT;
+                coords.x = right;
+                coords.y = bounds.top + bounds.height/2;
             } else {
                 terminal = INPUT;
+                coords.x = left;
+                coords.y = bounds.top + bounds.height/2;
             }
         } else {  // rotation is 180 degrees
             if ( abs(mouse.x - left) > abs(mouse.x - right) ) {
                 terminal = INPUT;
+                coords.x = right;
+                coords.y = bounds.top + bounds.height/2;
             } else {
                 terminal = OUTPUT;
+                coords.x = left;
+                coords.y = bounds.top + bounds.height/2;
             }
         }
     }
-    return terminal;
+    return std::make_pair(terminal, coords);
 }
 
 void CircuitSimulatorGUI::ProcessEvents() {
@@ -151,10 +177,13 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         sf::Mouse::getPosition(*this)
                     );
 
-                    bool clicked_component = false;
+                    sf::FloatRect bounds;
+
+                    std::shared_ptr<GUIComponent> clicked_component = nullptr;
+
                     for (auto it = components_.begin(); it != components_.end(); it++) {
-                        const sf::FloatRect bounds = (*it)->getGlobalBounds();
-                        
+                        if (clicked_component) break;
+                        bounds = (*it)->getGlobalBounds();
                         if (bounds.contains(mouse)) {
                             switch ( action_ ) {
                                 case MOVING_COMPONENT:
@@ -175,44 +204,32 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 default:
                                     break;
                             }
-                            clicked_component = true;
-                            /*
-                            TerminalType terminal = DetermineTerminal(bounds, int((*it)->getRotation()), mouse);
-                            std::cout << (*it)->GetName() << ", Clicked terminal: ";
-                            switch ( terminal ) {
-                                case INPUT:
-                                    std::cout << "INPUT";
-                                    break;
-                                case OUTPUT:
-                                    std::cout << "OUTPUT";
-                                    break;
-                                default:
-                                    break;
-                            }
-                            std::cout << std::endl;
-                            */
+                            clicked_component = *it;
                             break;
-                            
                         }
                     }
-                    if ( action_ == DELETING_ELEMENT  && !clicked_component) {
+                    if ( action_ == DELETING_ELEMENT  && !clicked_component ) {
+                        
                         bool closeToWire = false;
                         for (auto it = wires_.begin(); it != wires_.end(); it++) {
+                            /*
                             if ((*it)->getBounds().contains(mouse)) {  // Proceed if mouse is relatively close to the wire
-                                for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
-                                    sf::Vertex P_1 = (*(*it))[i];
-                                    sf::Vertex P_2 = (*(*it))[i + 1];
-                                    // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-                                    float d = (
-                                        abs((P_2.position.y - P_1.position.y) * mouse.x -
-                                            (P_2.position.x - P_1.position.x) * mouse.y +
-                                             P_2.position.x * P_1.position.y - P_2.position.y * P_1.position.x)
-                                        / std::sqrt(std::pow(P_2.position.x - P_1.position.x, 2) + std::pow(P_2.position.y - P_1.position.y, 2))
-                                    );
-                                    if (abs(d) <= 10) {
-                                        closeToWire = true;
-                                        break;
-                                    }
+                            DOES NOT WORK WITH HORIZONTAL OR VERTICAL LINES!
+                            */
+                            
+                            for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
+                                sf::Vertex P_1 = (*(*it))[i];
+                                sf::Vertex P_2 = (*(*it))[i + 1];
+                                // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+                                float d = (
+                                    abs((P_2.position.y - P_1.position.y) * mouse.x -
+                                        (P_2.position.x - P_1.position.x) * mouse.y +
+                                            P_2.position.x * P_1.position.y - P_2.position.y * P_1.position.x)
+                                    / std::sqrt(std::pow(P_2.position.x - P_1.position.x, 2) + std::pow(P_2.position.y - P_1.position.y, 2))
+                                );
+                                if (abs(d) <= 10) {
+                                    closeToWire = true;
+                                    break;
                                 }
                             }
                             if (closeToWire) {
@@ -222,8 +239,13 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                     }
 
-                    if (addingWire_) {
+                    if (addingWire_ && action_ == DRAWING_WIRE) {
                         int count = addingWire_->getVertexCount();
+                        if (clicked_component) {
+                            auto rot = clicked_component->getRotation();
+                            auto pair = TerminalClick(bounds, rot, mouse);
+                            (*addingWire_)[count - 1].position = pair.second;
+                        }
                         addingWire_->resize(count + 1);
                         (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
                         (*addingWire_)[count].color = sf::Color(0, 0, 0);
@@ -318,13 +340,13 @@ void CircuitSimulatorGUI::ProcessEvents() {
                 break;
 
             case sf::Event::KeyPressed:
-                if (event.key.code == sf::Keyboard::M) {  // Move
+                if (event.key.code == sf::Keyboard::M && event.key.control) {  // Move
                     action_ = MOVING_COMPONENT;
-                } else if (event.key.code == sf::Keyboard::F) {  // Rotate or flip
+                } else if (event.key.code == sf::Keyboard::F && event.key.control) {  // Rotate or flip
                     action_ = ROTATING_COMPONENT;
-                } else if (event.key.code == sf::Keyboard::D) {
+                } else if (event.key.code == sf::Keyboard::D && event.key.control) {
                     action_ = DELETING_ELEMENT;
-                } else if (event.key.code == sf::Keyboard::W) {
+                } else if (event.key.code == sf::Keyboard::W && event.key.control) {
                     if (!addingWire_ && action_ != DRAWING_WIRE) {
                         wires_.push_back(
                             std::make_shared<GUIWire>()
@@ -335,30 +357,34 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
-                } else if (event.key.code == sf::Keyboard::R) {
+                } else if (event.key.code == sf::Keyboard::R && event.key.control) {
                     if (!addingComponent_ && action_ != ADDING_COMPONENT) {
                         AddingComponent(
                             std::make_shared<GUIResistor>("R" + std::to_string(resistors_))
                         );
                     }
-                } else if (event.key.code == sf::Keyboard::C) {
+                } else if (event.key.code == sf::Keyboard::C && event.key.control) {
                     if (!addingComponent_ && action_ != ADDING_COMPONENT) {
                         AddingComponent(
                             std::make_shared<GUICapacitor>("C" + std::to_string(capacitors_))
                         );
                     }
-                } else if (event.key.code == sf::Keyboard::L) {
+                } else if (event.key.code == sf::Keyboard::L && event.key.control) {
                     if (!addingComponent_ && action_ != ADDING_COMPONENT) {
                         AddingComponent(
                             std::make_shared<GUIInductor>("L" + std::to_string(inductors_))
                         );
                     }
-                } else if (event.key.code == sf::Keyboard::V) {
+                } else if (event.key.code == sf::Keyboard::V && event.key.control) {
                     if (!addingComponent_ && action_ != ADDING_COMPONENT) {
                         AddingComponent(
                             std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                         );
                     }
+                } else if (event.key.code == sf::Keyboard::O && event.key.control) {
+                    
+                } else if (event.key.code == sf::Keyboard::S && event.key.control) {
+                    
                 }
                 break;
 
@@ -391,30 +417,30 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         {
             if (ImGui::BeginMenu("Add component.."))
             {
-                if (ImGui::MenuItem("Resistor", "R")) {
+                if (ImGui::MenuItem("Resistor", "CTRL+R")) {
                     AddingComponent(
                         std::make_shared<GUIResistor>("R" + std::to_string(resistors_))
                     );
                 }
-                if (ImGui::MenuItem("Capacitor", "C")) {
+                if (ImGui::MenuItem("Capacitor", "CTRL+C")) {
                     AddingComponent(
                         std::make_shared<GUICapacitor>("C" + std::to_string(capacitors_))
                     );
                 }
-                if (ImGui::MenuItem("Inductor", "L")) {
+                if (ImGui::MenuItem("Inductor", "CTRL+L")) {
                     AddingComponent(
                         std::make_shared<GUIInductor>("L" + std::to_string(inductors_))
                     );
                 }
-                if (ImGui::MenuItem("Voltage source", "V")) {
+                if (ImGui::MenuItem("Voltage source", "CTRL+V")) {
                     AddingComponent(
                         std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                     );
                 }
-                if (ImGui::MenuItem("Current source", "J", false, false)) {}
+                if (ImGui::MenuItem("Current source", "CTRL+J", false, false)) {}
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Wire", "W")) {
+            if (ImGui::MenuItem("Wire", "CTRL+W")) {
                 wires_.push_back(
                     std::make_shared<GUIWire>()
                 );
@@ -422,13 +448,13 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 (*addingWire_)[0].color = sf::Color(0, 0, 0);
                 action_ = DRAWING_WIRE;
             }
-            if (ImGui::MenuItem("Flip", "F")) {
+            if (ImGui::MenuItem("Flip", "CTRL+F")) {
                 action_ = ROTATING_COMPONENT;
             }
-            if (ImGui::MenuItem("Move", "M")) {
+            if (ImGui::MenuItem("Move", "CTRL+M")) {
                 action_ = MOVING_COMPONENT;
             }
-            if (ImGui::MenuItem("Delete", "D")) {
+            if (ImGui::MenuItem("Delete", "CTRL+D")) {
                 action_ = DELETING_ELEMENT;
             }
             ImGui::EndMenu();
@@ -481,14 +507,16 @@ void CircuitSimulatorGUI::RenderMenuBar() {
      */
     if(file_dialog_.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), ".txt"))
     {
-        std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-        std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
+        LoadCircuit(file_dialog_.selected_path);
+        //std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+        //std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
     }
     if(file_dialog_.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), ".txt"))
     {
-        std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-        std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
-        std::cout << file_dialog_.ext << std::endl;              // Access ext separately (For SAVE mode)
+        SaveCircuit(file_dialog_.selected_path);
+        //std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+        //std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
+        //std::cout << file_dialog_.ext << std::endl;              // Access ext separately (For SAVE mode)
         //Do writing of files based on extension here
     }
 }

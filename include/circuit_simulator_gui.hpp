@@ -51,9 +51,12 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
 
         void CancelAllActions();
 
-        TerminalType DetermineTerminal(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
+        std::pair<TerminalType, sf::Vector2f> TerminalClick(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const;
 
         void UpdateHelperLines(sf::Vector2i closest);
+
+        void LoadCircuit(std::string &file);
+        void SaveCircuit(std::string &file);
     
     private:
         Circuit circuit_;
