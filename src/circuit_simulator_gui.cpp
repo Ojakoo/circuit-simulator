@@ -240,6 +240,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             case INDUCTOR:
                                 inductors_++;
                                 break;
+                            case DC_VOLTAGE_SOURCE:
+                                sources_++;
+                                break;
                             default:
                                 break;
                         }
