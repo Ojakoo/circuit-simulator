@@ -29,6 +29,7 @@ void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> componen
     action_ = ADDING_COMPONENT;
 }
 
+
 void CircuitSimulatorGUI::CancelAllActions() {
     action_ = NO_ACTION;
     movingComponent_ = nullptr;
@@ -46,6 +47,13 @@ void CircuitSimulatorGUI::CancelAllActions() {
         }
     }
     addingWire_ = nullptr;
+}
+
+void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
+    helper_lines_[0].position = sf::Vector2f(0, closest.y);
+    helper_lines_[1].position = sf::Vector2f(this->getSize().x,closest.y);
+    helper_lines_[2].position = sf::Vector2f(closest.x, 0);
+    helper_lines_[3].position = sf::Vector2f(closest.x, this->getSize().y);
 }
 
 
@@ -73,6 +81,11 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
                     lines[k + 1].position = sf::Vector2f(640, j);
                     lines[k + 1].color = sf::Color(197, 206, 219);
                 }
+
+                helper_lines_[0].color = sf::Color(197, 206, 219, 100);
+                helper_lines_[1].color = sf::Color(197, 206, 219, 100);
+                helper_lines_[2].color = sf::Color(197, 206, 219, 100);
+                helper_lines_[3].color = sf::Color(197, 206, 219, 100);
             }
 
 
@@ -270,6 +283,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                         if (addingWire_) {
                             sf::Vector2i closest = MapCoordsToClosest(sf::Vector2i(int(newPos.x), int(newPos.y)));
+                            UpdateHelperLines(closest);
                             (*addingWire_)[addingWire_->getVertexCount() - 1].position = sf::Vector2f(closest.x, closest.y);
                         }
                         
@@ -318,6 +332,30 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
+                } else if (event.key.code == sf::Keyboard::R) {
+                    if (!addingComponent_ && action_ != ADDING_COMPONENT) {
+                        AddingComponent(
+                            std::make_shared<GUIResistor>("R" + std::to_string(resistors_))
+                        );
+                    }
+                } else if (event.key.code == sf::Keyboard::C) {
+                    if (!addingComponent_ && action_ != ADDING_COMPONENT) {
+                        AddingComponent(
+                            std::make_shared<GUICapacitor>("C" + std::to_string(capacitors_))
+                        );
+                    }
+                } else if (event.key.code == sf::Keyboard::L) {
+                    if (!addingComponent_ && action_ != ADDING_COMPONENT) {
+                        AddingComponent(
+                            std::make_shared<GUIInductor>("L" + std::to_string(inductors_))
+                        );
+                    }
+                } else if (event.key.code == sf::Keyboard::V) {
+                    if (!addingComponent_ && action_ != ADDING_COMPONENT) {
+                        AddingComponent(
+                            std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
+                        );
+                    }
                 }
                 break;
 
@@ -468,6 +506,9 @@ void CircuitSimulatorGUI::DrawComponents() {
     }
 
     // draw(lines);
+    if (action_ == DRAWING_WIRE) {
+        draw(helper_lines_);
+    }
 }
 
 
