@@ -181,8 +181,10 @@ void CircuitSimulatorGUI::ProcessEvents() {
 
                     std::shared_ptr<GUIComponent> clicked_component = nullptr;
 
+                    bool deleted = false;
+
                     for (auto it = components_.begin(); it != components_.end(); it++) {
-                        if (clicked_component) break;
+                        if (deleted) break;
                         bounds = (*it)->getGlobalBounds();
                         if (bounds.contains(mouse)) {
                             switch ( action_ ) {
@@ -200,11 +202,12 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 case DELETING_ELEMENT:
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
+                                    deleted = true;
                                     break;
                                 default:
                                     break;
                             }
-                            clicked_component = *it;
+                            if (!deleted) clicked_component = *it;
                             break;
                         }
                     }
