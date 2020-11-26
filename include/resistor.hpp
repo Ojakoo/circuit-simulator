@@ -14,6 +14,8 @@ class Resistor: public PassiveComponent {
 
         float GetValue() const;
 
+        void SetValue(float newval);
+
         float GetAdmittance() const;
 
         ComponentType GetType() const;

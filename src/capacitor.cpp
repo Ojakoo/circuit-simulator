@@ -12,6 +12,10 @@ float Capacitor::GetValue() const {
     return capacitance_;
 }
 
+void Capacitor::SetValue(float newval) {
+    capacitance_ = newval;
+}
+
 std::complex<float> Capacitor::GetAdmittance(const float w) const {
     return std::complex<float>(0, w * capacitance_);
 }

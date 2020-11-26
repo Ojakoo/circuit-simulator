@@ -14,6 +14,8 @@ class Capacitor: public PassiveComponent {
 
         float GetValue() const;
 
+        void SetValue(float newval);
+
         std::complex<float> GetAdmittance(const float w) const;
 
         ComponentType GetType() const;

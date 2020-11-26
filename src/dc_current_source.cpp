@@ -11,6 +11,10 @@ float DCCurrentSource::GetValue() const {
     return current_;
 }
 
+void DCCurrentSource::SetValue(float newval) {
+    current_ = newval;
+}
+
 ComponentType DCCurrentSource::GetType() const {
     return DC_CURRENT_SOURCE;
 }

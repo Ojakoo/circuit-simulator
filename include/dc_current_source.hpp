@@ -12,6 +12,8 @@ class DCCurrentSource : public ActiveComponent {
 
         float GetValue() const;
 
+        void SetValue(float newval);
+
         ComponentType GetType() const;
 
     private:

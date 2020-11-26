@@ -11,6 +11,10 @@ float DCVoltageSource::GetValue() const {
     return voltage_;
 }
 
+void DCVoltageSource::SetValue(float newval) {
+    voltage_ = newval;
+}
+
 ComponentType DCVoltageSource::GetType() const {
     return DC_VOLTAGE_SOURCE;
 }
