@@ -23,6 +23,10 @@ class GUIComponent : public sf::Sprite {
 
         float GetValue() const;
 
+        const ComponentClass GetClass() const;
+
+        void SetValue(float newval);
+
         const ComponentType GetType() const;
 
         const std::shared_ptr<Component> GetComponent() const;

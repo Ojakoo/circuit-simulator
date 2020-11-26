@@ -51,6 +51,8 @@ class Component {
 
         virtual float GetValue() const = 0;
 
+        virtual void SetValue(float newval) = 0;
+
         virtual ComponentClass GetClass() const = 0;
 
         virtual ComponentType GetType() const = 0;

@@ -47,6 +47,7 @@ void CircuitSimulatorGUI::CancelAllActions() {
         }
     }
     addingWire_ = nullptr;
+    editingComponent_ = nullptr;
 }
 
 void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
@@ -171,8 +172,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                 break;
             
             case sf::Event::MouseButtonPressed:
-                if (event.mouseButton.button == sf::Mouse::Left) {
 
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    if (editingComponent_ && action_ == EDIT_VALUE) return;
                     sf::Vector2f mouse = mapPixelToCoords(
                         sf::Mouse::getPosition(*this)
                     );
@@ -206,9 +208,11 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     components_.erase(it);
                                     deleted = true;
                                     break;
+                                case EDIT_VALUE:
+                                    editingComponent_ = *it;
+                                    popup_value_ = editingComponent_->GetValue();
+                                    break;
                                 default:
-                                    // change component value
-                                    
                                     break;
                             }
                             if (!deleted) clicked_component = *it;
@@ -296,12 +300,14 @@ void CircuitSimulatorGUI::ProcessEvents() {
                 break;
 
             case sf::Event::MouseButtonReleased:
+                if (editingComponent_ && action_ == EDIT_VALUE) break;
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     movingView_ = false;
                 }
                 break;
 
             case sf::Event::MouseMoved:
+                if (editingComponent_ && action_ == EDIT_VALUE) break;
                 {
                     const sf::Vector2f newPos = mapPixelToCoords(
                         sf::Vector2i(event.mouseMove.x, event.mouseMove.y)
@@ -332,6 +338,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     break;
                 }
             case sf::Event::MouseWheelScrolled:
+                if (editingComponent_ && action_ == EDIT_VALUE) break;
                 if (movingView_) break;
 
                 if (event.mouseWheelScroll.delta <= -1) {
@@ -348,6 +355,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                 break;
 
             case sf::Event::KeyPressed:
+                if (editingComponent_ && action_ == EDIT_VALUE) break;
                 if (event.key.code == sf::Keyboard::M && event.key.control) {  // Move
                     action_ = MOVING_COMPONENT;
                 } else if (event.key.code == sf::Keyboard::F && event.key.control) {  // Rotate or flip
@@ -389,6 +397,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                         );
                     }
+                } else if (event.key.code == sf::Keyboard::E && event.key.control) {
+                    action_ = EDIT_VALUE;
                 } else if (event.key.code == sf::Keyboard::O && event.key.control) {
                     
                 } else if (event.key.code == sf::Keyboard::S && event.key.control) {
@@ -465,6 +475,9 @@ void CircuitSimulatorGUI::RenderMenuBar() {
             if (ImGui::MenuItem("Delete", "CTRL+D")) {
                 action_ = DELETING_ELEMENT;
             }
+            if (ImGui::MenuItem("Value", "CTRL+E")) {
+                action_ = EDIT_VALUE;
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Simulate"))
@@ -499,6 +512,9 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 cursor_.loadFromSystem(sf::Cursor::Cross);
                 setMouseCursor(cursor_);
                 break;
+            case EDIT_VALUE:
+                ImGui::TextColored(ImVec4(1,1,0,1), "Edit value...");
+                break;
             default:
                 break;
         }
@@ -526,6 +542,30 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         //std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
         //std::cout << file_dialog_.ext << std::endl;              // Access ext separately (For SAVE mode)
         //Do writing of files based on extension here
+    }
+}
+
+void CircuitSimulatorGUI::RenderPopup() {
+    if (editingComponent_ && action_ == EDIT_VALUE) {
+        ImGui::OpenPopup("Edit value");
+        if (ImGui::BeginPopupModal("Edit value", NULL)) {
+            std::stringstream str;
+            std::string val = std::to_string(editingComponent_->GetValue());
+            str << "Edit the value of " << editingComponent_->GetName() << "\n";
+            ImGui::Text("%s", str.str().c_str());
+            ImGui::InputFloat("Value", &popup_value_, 0.0f, 0.0f, "%e");
+            if (ImGui::Button("OK")) {
+                if (popup_value_ > 0 || editingComponent_->GetClass() == ACTIVE) {
+                    editingComponent_->SetValue(popup_value_);
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                ImGui::CloseCurrentPopup();
+                editingComponent_ = nullptr;
+            }
+            ImGui::EndPopup();
+        }
     }
 }
 
@@ -558,6 +598,7 @@ void CircuitSimulatorGUI::main_loop() {
         ImGui::SFML::Update(*this, deltaClock_.restart());
         RenderMenuBar();
         DrawComponents();
+        RenderPopup();
         ImGui::SFML::Render(*this);
         display();
     }

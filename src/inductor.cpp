@@ -12,6 +12,10 @@ float Inductor::GetValue() const {
     return inductance_;
 }
 
+void Inductor::SetValue(float newval) {
+    inductance_ = newval;
+}
+
 std::complex<float> Inductor::GetAdmittance(const float w) const {
     return std::complex<float>(0, 1 / (w * inductance_));
 }

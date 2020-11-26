@@ -30,7 +30,8 @@ enum GUIAction {
     ROTATING_COMPONENT,
     DELETING_ELEMENT,
     DRAWING_WIRE,
-    ADDING_COMPONENT
+    ADDING_COMPONENT,
+    EDIT_VALUE
 };
 
 
@@ -44,6 +45,8 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         void ProcessEvents();
 
         void RenderMenuBar();
+
+        void RenderPopup();
 
         void DrawComponents();
 
@@ -73,10 +76,12 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         GUIAction action_ = NO_ACTION;  // current action performed by user
         std::shared_ptr<GUIComponent> movingComponent_ = nullptr;  // pointer to component being moved
         std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
+        std::shared_ptr<GUIComponent> editingComponent_ = nullptr;  // pointer to component being edited
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
         sf::Cursor cursor_;
         sf::VertexArray helper_lines_ = sf::VertexArray(sf::Lines, 4);
         imgui_addons::ImGuiFileBrowser file_dialog_;
         sf::VertexArray lines;
+        float popup_value_;
 };

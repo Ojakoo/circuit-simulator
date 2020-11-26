@@ -41,8 +41,16 @@ const ComponentType GUIComponent::GetType() const {
     return component_->GetType();
 }
 
+const ComponentClass GUIComponent::GetClass() const {
+    return component_->GetClass();
+}
+
 const std::shared_ptr<Component> GUIComponent::GetComponent() const {
     return component_;
+}
+
+void GUIComponent::SetValue(float newval) {
+    component_->SetValue(newval);
 }
 
 void GUIComponent::Disconnect() {

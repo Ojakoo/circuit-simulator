@@ -12,6 +12,10 @@ float Resistor::GetValue() const {
     return resistance_;
 }
 
+void Resistor::SetValue(float newval) {
+    resistance_ = newval;
+}
+
 float Resistor::GetAdmittance() const {
     return 1 / resistance_;
 }
