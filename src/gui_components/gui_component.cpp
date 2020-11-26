@@ -33,6 +33,10 @@ const std::string GUIComponent::GetName() const {
     return component_->GetName();
 }
 
+float GUIComponent::GetValue() const {
+    return component_->GetValue();
+}
+
 const ComponentType GUIComponent::GetType() const {
     return component_->GetType();
 }
@@ -46,20 +50,25 @@ void GUIComponent::Disconnect() {
     output_connected_ = false;
 }
 
-void GUIComponent::DrawName(sf::RenderWindow &window) const {
+void GUIComponent::DrawInfo(sf::RenderWindow &window) const {
     sf::Font font;
     if (font.loadFromFile("../fonts/arial.ttf"))
     {
-        sf::Text text(GetName(), font, 14);
-        text.setFillColor(sf::Color::Black);
+        sf::Text name(GetName(), font, 14);
+        sf::Text value(std::to_string(GetValue()), font, 14);
+        name.setFillColor(sf::Color::Black);
+        value.setFillColor(sf::Color::Black);
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
         if ( rot == 90.f || rot == 270.f) {
-            text.setPosition(bounds.left - 20, bounds.top + bounds.height/2);
+            name.setPosition(bounds.left - 20, bounds.top + bounds.height/2);
+            value.setPosition(bounds.left - 20, bounds.top + bounds.height/2 + 20);
         } else {
-            text.setPosition(bounds.left + bounds.width/2, bounds.top - 20);
+            name.setPosition(bounds.left + bounds.width/2, bounds.top - 20);
+            value.setPosition(bounds.left + bounds.width/2 + 20, bounds.top - 20);
         }
-        window.draw(text);
+        window.draw(name);
+        window.draw(value);
     }
 }
 

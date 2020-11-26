@@ -21,11 +21,13 @@ class GUIComponent : public sf::Sprite {
 
         const std::string GetName() const;
 
+        float GetValue() const;
+
         const ComponentType GetType() const;
 
         const std::shared_ptr<Component> GetComponent() const;
 
-        void DrawName(sf::RenderWindow &window) const;
+        void DrawInfo(sf::RenderWindow &window) const;
 
         void DrawTerminalRects(sf::RenderWindow &window);
 

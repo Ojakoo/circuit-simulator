@@ -207,6 +207,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     deleted = true;
                                     break;
                                 default:
+                                    // change component value
+                                    
                                     break;
                             }
                             if (!deleted) clicked_component = *it;
@@ -534,7 +536,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw components
     for ( auto it : components_ ) {
         draw(*it);
-        it->DrawName(*this);
+        it->DrawInfo(*this);
         it->DrawTerminalRects(*this);
     }
 
