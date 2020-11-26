@@ -194,10 +194,12 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                         movingComponent_ = nullptr;
                                     } else {
                                         movingComponent_ = *it;
+                                        movingComponent_->Disconnect();
                                     }
                                     break;
                                 case ROTATING_COMPONENT:
                                     (*it)->rotate(90);
+                                    (*it)->Disconnect();
                                     break;
                                 case DELETING_ELEMENT:
                                     circuit_.RemoveComponent((*it)->GetComponent());
@@ -248,6 +250,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             (*addingWire_)[count - 1].position = pair.second;
+                            clicked_component->SetTerminalRects(pair.first, pair.second);
                         }
                         addingWire_->resize(count + 1);
                         (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
@@ -532,6 +535,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     for ( auto it : components_ ) {
         draw(*it);
         it->DrawName(*this);
+        it->DrawTerminalRects(*this);
     }
 
     // draw wires

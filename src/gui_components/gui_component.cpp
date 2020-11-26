@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "SFML/Graphics/Text.hpp"
+#include "SFML/Graphics/RectangleShape.hpp"
 
 #include "gui_components/gui_component.hpp"
 
@@ -15,6 +16,17 @@ GUIComponent::GUIComponent(const std::string& texture, std::shared_ptr<Component
         // set component
         component_ = component;
         setOrigin(getLocalBounds().width/2, getLocalBounds().height/2);
+
+        // init terminal rects
+        input_rect_.setPosition(0,0);
+        input_rect_.setSize(sf::Vector2f(9, 9));
+        input_rect_.setOrigin(5, 5);
+        input_rect_.setFillColor(sf::Color::Black);
+
+        output_rect_.setPosition(0, 0);
+        output_rect_.setSize(sf::Vector2f(9, 9));
+        output_rect_.setOrigin(5, 5);
+        output_rect_.setFillColor(sf::Color::Black);
      }
 
 const std::string GUIComponent::GetName() const {
@@ -29,11 +41,16 @@ const std::shared_ptr<Component> GUIComponent::GetComponent() const {
     return component_;
 }
 
+void GUIComponent::Disconnect() {
+    input_connected_ = false;
+    output_connected_ = false;
+}
+
 void GUIComponent::DrawName(sf::RenderWindow &window) const {
-    sf::Font MyFont;
-    if (MyFont.loadFromFile("../fonts/arial.ttf"))
+    sf::Font font;
+    if (font.loadFromFile("../fonts/arial.ttf"))
     {
-        sf::Text text(GetName(), MyFont, 14);
+        sf::Text text(GetName(), font, 14);
         text.setFillColor(sf::Color::Black);
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
@@ -43,5 +60,27 @@ void GUIComponent::DrawName(sf::RenderWindow &window) const {
             text.setPosition(bounds.left + bounds.width/2, bounds.top - 20);
         }
         window.draw(text);
+    }
+}
+
+void GUIComponent::DrawTerminalRects(sf::RenderWindow &window) {
+    if (input_connected_) {
+        window.draw(input_rect_);
+    }
+    if (output_connected_) {
+        window.draw(output_rect_);
+    }
+}
+
+void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
+    switch ( terminal ) {
+        case INPUT:
+            input_connected_ = true;
+            input_rect_.setPosition(coords);
+            break;
+        case OUTPUT:
+            output_connected_ = true;
+            output_rect_.setPosition(coords);
+            break;
     }
 }
