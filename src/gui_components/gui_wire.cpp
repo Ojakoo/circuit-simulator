@@ -8,10 +8,10 @@ GUIWire::GUIWire() : sf::VertexArray(sf::LineStrip, 1) { }
 
 GUIWire::~GUIWire() {
     // disconnect every component
-    for ( auto it : connected_ ) {
-        auto component = it.first->GetComponent();
-        component->ConnectNodeToTerminal(nullptr, it.second);
-        
+    for ( auto it : components_ ) {
+        for (auto comp : components_[it.first]) {
+            comp->RemoveWire(it.first);
+        }
     }
 }
 
@@ -32,5 +32,5 @@ const std::shared_ptr<Node> GUIWire::GetNode() const {
 }
 
 void GUIWire::ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType type) {
-    connected_[comp] = type;
+    components_[type].push_back(comp);
 }
