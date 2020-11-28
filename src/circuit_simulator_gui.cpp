@@ -249,7 +249,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 }
                             }
                             if (closeToWire) {
-                                circuit_.RemoveNode((*it)->GetNode()->GetName());
+                                // delete wire from circuit
                                 wires_.erase(it);
                                 break;
                             }
@@ -400,7 +400,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     action_ = DELETING_ELEMENT;
                 } else if (event.key.code == sf::Keyboard::W && event.key.control) {
                     if (!addingWire_ && action_ != DRAWING_WIRE) {
-                        AddingWire(std::make_shared<GUIWire>());
+                        AddingWire(std::make_shared<GUIWire>(circuit_));
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
@@ -490,7 +490,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Wire", "CTRL+W")) {
-                AddingWire(std::make_shared<GUIWire>());
+                AddingWire(std::make_shared<GUIWire>(circuit_));
             }
             if (ImGui::MenuItem("Flip", "CTRL+F")) {
                 action_ = ROTATING_COMPONENT;
@@ -510,6 +510,9 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         {
             if (ImGui::MenuItem("Steady state analysis")) {
                 std::cout << circuit_ << std::endl;
+                for (auto it: circuit_.GetNodes()) {
+                    std::cout << it.first << std::endl;
+                }
             }
             if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
             ImGui::EndMenu();

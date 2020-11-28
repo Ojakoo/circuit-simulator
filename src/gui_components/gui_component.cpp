@@ -103,10 +103,11 @@ void GUIComponent::ConnectWire(TerminalType terminal) {
     connected_wires_[terminal] += 1;
 }
 
-void GUIComponent::RemoveWire(TerminalType terminal) {
+void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
     connected_wires_[terminal] -= 1;
     if (connected_wires_[terminal] <= 0) {
-        // disconnect
+        // disconnect and remove from circuit
+        circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
         ConnectNodeToTerminal(terminal, nullptr);
     }
 }
