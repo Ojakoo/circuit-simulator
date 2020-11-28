@@ -29,6 +29,16 @@ void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> componen
     action_ = ADDING_COMPONENT;
 }
 
+void CircuitSimulatorGUI::AddingWire(std::shared_ptr<GUIWire> wire) {
+    wires_.push_back(wire);
+    std::shared_ptr<Node> node = circuit_.AddNode("N" + std::to_string(nodes_));
+    nodes_++;
+    wire->SetNode(node);
+    (*wire)[0].color = sf::Color(0, 0, 0);
+    addingWire_ = wire;
+    action_ = DRAWING_WIRE;
+}
+
 
 void CircuitSimulatorGUI::CancelAllActions() {
     action_ = NO_ACTION;
@@ -96,6 +106,8 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
                 helper_lines_[1].color = sf::Color(197, 206, 219, 100);
                 helper_lines_[2].color = sf::Color(197, 206, 219, 100);
                 helper_lines_[3].color = sf::Color(197, 206, 219, 100);
+
+                ground_ = std::make_shared<GUIGround>();
             }
 
 
@@ -196,12 +208,10 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                         movingComponent_ = nullptr;
                                     } else {
                                         movingComponent_ = *it;
-                                        movingComponent_->Disconnect();
                                     }
                                     break;
                                 case ROTATING_COMPONENT:
                                     (*it)->rotate(90);
-                                    (*it)->Disconnect();
                                     break;
                                 case DELETING_ELEMENT:
                                     circuit_.RemoveComponent((*it)->GetComponent());
@@ -244,6 +254,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 }
                             }
                             if (closeToWire) {
+                                circuit_.RemoveNode((*it)->GetNode()->GetName());
                                 wires_.erase(it);
                                 break;
                             }
@@ -256,6 +267,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             (*addingWire_)[count - 1].position = pair.second;
+                            addingWire_->ConnectComponent(clicked_component, pair.first);
+                            clicked_component->ConnectTerminalTo(pair.first, addingWire_->GetNode());
                             clicked_component->SetTerminalRects(pair.first, pair.second);
                         }
                         addingWire_->resize(count + 1);
@@ -364,12 +377,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     action_ = DELETING_ELEMENT;
                 } else if (event.key.code == sf::Keyboard::W && event.key.control) {
                     if (!addingWire_ && action_ != DRAWING_WIRE) {
-                        wires_.push_back(
-                            std::make_shared<GUIWire>()
-                        );
-                        addingWire_ = wires_.back();
-                        (*addingWire_)[0].color = sf::Color(0, 0, 0);
-                        action_ = DRAWING_WIRE;
+                        AddingWire(std::make_shared<GUIWire>());
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
@@ -459,12 +467,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Wire", "CTRL+W")) {
-                wires_.push_back(
-                    std::make_shared<GUIWire>()
-                );
-                addingWire_ = wires_.back();
-                (*addingWire_)[0].color = sf::Color(0, 0, 0);
-                action_ = DRAWING_WIRE;
+                AddingWire(std::make_shared<GUIWire>());
             }
             if (ImGui::MenuItem("Flip", "CTRL+F")) {
                 action_ = ROTATING_COMPONENT;
@@ -585,7 +588,13 @@ void CircuitSimulatorGUI::DrawComponents() {
         draw(*it);
     }
 
+    // draw ground
+    if (ground_) {
+        ground_->draw(*this);
+    }
+
     // draw(lines);
+    // draw helper lines
     if (action_ == DRAWING_WIRE) {
         draw(helper_lines_);
     }

@@ -37,14 +37,12 @@ class GUIComponent : public sf::Sprite {
 
         void SetTerminalRects(TerminalType terminal, sf::Vector2f coords);
 
-        void Disconnect();
-        
+        void ConnectTerminalTo(TerminalType terminal, std::shared_ptr<Node> node);
+
 
     private:
         sf::Texture tx_;  // holds pointer for texture
         std::shared_ptr<Component> component_;
-        bool input_connected_ = false;
-        bool output_connected_ = false;
         sf::RectangleShape input_rect_;
         sf::RectangleShape output_rect_;
 };
