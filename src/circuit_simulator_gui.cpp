@@ -225,7 +225,6 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     break;
                             }
                             if (!deleted) clicked_component = *it;
-                            std::cout << "click" << std::endl;
                             break;
                         }
                     }
