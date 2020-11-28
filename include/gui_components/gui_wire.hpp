@@ -4,10 +4,12 @@
 
 #include "gui_components/gui_component.hpp"
 
+#include "circuit.hpp"
+
 
 class GUIWire : public sf::VertexArray {
     public:
-        GUIWire();
+        GUIWire(Circuit &circuit);
 
         ~GUIWire();
 
@@ -21,7 +23,12 @@ class GUIWire : public sf::VertexArray {
 
         void ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType type);
 
+        std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GetComponents() {
+            return components_;
+        }
+
     private:
         std::shared_ptr<Node> node_ = nullptr;
         std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> components_;
+        Circuit &circuit_;
 };

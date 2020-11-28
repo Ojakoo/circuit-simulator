@@ -27,6 +27,9 @@ public:
     const MatrixXcf GetAMatrix() const;
     const VectorXf GetZMatrix() const;
     void RemoveComponent(std::shared_ptr<Component> component);
+    std::map<std::string, std::shared_ptr<Node>> GetNodes() {
+        return nodes_;
+    }
 private:
     int i_ = 0; // number of sources
     int n_ = 0; // number of nodes (excluding ground node)

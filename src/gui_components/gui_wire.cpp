@@ -4,13 +4,13 @@
 
 #include <iostream>
 
-GUIWire::GUIWire() : sf::VertexArray(sf::LineStrip, 1) { }
+GUIWire::GUIWire(Circuit &circuit) : circuit_(circuit), sf::VertexArray(sf::LineStrip, 1) { }
 
 GUIWire::~GUIWire() {
     // disconnect every component
     for ( auto it : components_ ) {
         for (auto comp : components_[it.first]) {
-            comp->RemoveWire(it.first);
+            comp->RemoveWire(it.first, circuit_);
         }
     }
 }

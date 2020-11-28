@@ -9,6 +9,8 @@
 #include <SFML/Graphics/Texture.hpp>
 #include "SFML/Graphics/RectangleShape.hpp"
 
+#include "circuit.hpp"
+
 #include "component.hpp"
 
 
@@ -43,7 +45,7 @@ class GUIComponent : public sf::Sprite {
 
         void ConnectWire(TerminalType terminal);
 
-        void RemoveWire(TerminalType terminal);
+        void RemoveWire(TerminalType terminal, Circuit &circuit);
 
         const int GetWireCount(TerminalType terminal);
 
