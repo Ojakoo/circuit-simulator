@@ -1,15 +1,14 @@
 #pragma once
 
-#include <map>
+#include <SFML/Graphics/VertexArray.hpp>
 
 #include "gui_components/gui_component.hpp"
-
-#include <SFML/Graphics/VertexArray.hpp>
 
 
 class GUIWire : public sf::VertexArray {
     public:
         GUIWire();
+
         ~GUIWire();
 
         void SetNodeType(NodeType type);
@@ -24,5 +23,5 @@ class GUIWire : public sf::VertexArray {
 
     private:
         std::shared_ptr<Node> node_ = nullptr;
-        std::map<std::shared_ptr<GUIComponent>, TerminalType> connected_;
+        std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> components_;
 };

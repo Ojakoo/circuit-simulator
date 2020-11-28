@@ -95,7 +95,22 @@ void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) 
     }
 }
 
-
-void GUIComponent::ConnectTerminalTo(TerminalType terminal, std::shared_ptr<Node> node) {
+void GUIComponent::ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node) {
     component_->ConnectNodeToTerminal(node, terminal);
+}
+
+void GUIComponent::ConnectWire(TerminalType terminal) {
+    connected_wires_[terminal] += 1;
+}
+
+void GUIComponent::RemoveWire(TerminalType terminal) {
+    connected_wires_[terminal] -= 1;
+    if (connected_wires_[terminal] <= 0) {
+        // disconnect
+        ConnectNodeToTerminal(terminal, nullptr);
+    }
+}
+
+const int GUIComponent::GetWireCount(TerminalType terminal) {
+    return connected_wires_[terminal];
 }

@@ -31,9 +31,6 @@ void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> componen
 
 void CircuitSimulatorGUI::AddingWire(std::shared_ptr<GUIWire> wire) {
     wires_.push_back(wire);
-    std::shared_ptr<Node> node = circuit_.AddNode("N" + std::to_string(nodes_));
-    nodes_++;
-    wire->SetNode(node);
     (*wire)[0].color = sf::Color(0, 0, 0);
     addingWire_ = wire;
     action_ = DRAWING_WIRE;
@@ -107,7 +104,7 @@ CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string
                 helper_lines_[2].color = sf::Color(197, 206, 219, 100);
                 helper_lines_[3].color = sf::Color(197, 206, 219, 100);
 
-                ground_ = std::make_shared<GUIGround>();
+                //ground_ = std::make_shared<GUIGround>();
             }
 
 
@@ -200,6 +197,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     for (auto it = components_.begin(); it != components_.end(); it++) {
                         if (deleted) break;
                         bounds = (*it)->getGlobalBounds();
+                        // scale bounds a bit
+                        //bounds = sf::FloatRect(bounds.left - 3, bounds.top - 3, bounds.width + 6, bounds.height + 6);
                         if (bounds.contains(mouse)) {
                             switch ( action_ ) {
                                 case MOVING_COMPONENT:
@@ -226,6 +225,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     break;
                             }
                             if (!deleted) clicked_component = *it;
+                            std::cout << "click" << std::endl;
                             break;
                         }
                     }
@@ -233,11 +233,6 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         
                         bool closeToWire = false;
                         for (auto it = wires_.begin(); it != wires_.end(); it++) {
-                            /*
-                            if ((*it)->getBounds().contains(mouse)) {  // Proceed if mouse is relatively close to the wire
-                            DOES NOT WORK WITH HORIZONTAL OR VERTICAL LINES!
-                            */
-                            
                             for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
                                 sf::Vertex P_1 = (*(*it))[i];
                                 sf::Vertex P_2 = (*(*it))[i + 1];
@@ -262,18 +257,46 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     }
 
                     if (addingWire_ && action_ == DRAWING_WIRE) {
+                        bool skip = false;
                         int count = addingWire_->getVertexCount();
                         if (clicked_component) {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             (*addingWire_)[count - 1].position = pair.second;
-                            addingWire_->ConnectComponent(clicked_component, pair.first);
-                            clicked_component->ConnectTerminalTo(pair.first, addingWire_->GetNode());
-                            clicked_component->SetTerminalRects(pair.first, pair.second);
+                            auto node = clicked_component->GetComponent()->GetTerminalNode(pair.first);
+                            if (node) {
+                                // component already has a node at that terminal and
+                                if (addingWire_->GetNode() == node) {
+                                    // closed loop
+                                    skip = true;
+                                    wires_.remove(addingWire_);
+                                    CancelAllActions();
+                                } else {
+                                    addingWire_->SetNode(node);
+                                }
+                            } else { // component doesn't have a node at that terminal
+                                if (addingWire_->GetNode()) {
+                                    // The wire already has a node
+                                    node = addingWire_->GetNode();
+                                } else {
+                                    // the wire doesn't have a node
+                                    node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    nodes_++;
+                                    addingWire_->SetNode(node);
+                                }
+                                clicked_component->ConnectNodeToTerminal(pair.first, node);
+                            }
+                            if (!skip) {
+                                clicked_component->ConnectWire(pair.first);
+                                addingWire_->ConnectComponent(clicked_component, pair.first);
+                            }
+                            //clicked_component->SetTerminalRects(pair.first, pair.second);
                         }
-                        addingWire_->resize(count + 1);
-                        (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
-                        (*addingWire_)[count].color = sf::Color(0, 0, 0);
+                        if (!skip) {
+                            addingWire_->resize(count + 1);
+                            (*addingWire_)[count].position = sf::Vector2f(mouse.x, mouse.y);
+                            (*addingWire_)[count].color = sf::Color(0, 0, 0);
+                        }
                     }
 
                     if (addingComponent_) {
@@ -580,7 +603,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     for ( auto it : components_ ) {
         draw(*it);
         it->DrawInfo(*this);
-        it->DrawTerminalRects(*this);
+        //it->DrawTerminalRects(*this);
     }
 
     // draw wires
