@@ -99,6 +99,10 @@ void GUIComponent::ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<
     component_->ConnectNodeToTerminal(node, terminal);
 }
 
+std::shared_ptr<Node> GUIComponent::GetTerminalNode(TerminalType terminal) const {
+    return component_->GetTerminalNode(terminal);
+}
+
 void GUIComponent::ConnectWire(TerminalType terminal) {
     connected_wires_[terminal] += 1;
 }
