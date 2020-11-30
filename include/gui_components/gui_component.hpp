@@ -43,6 +43,8 @@ class GUIComponent : public sf::Sprite {
 
         void ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node);
 
+        std::shared_ptr<Node> GetTerminalNode(TerminalType terminal) const;
+
         void ConnectWire(TerminalType terminal);
 
         void RemoveWire(TerminalType terminal, Circuit &circuit);
