@@ -11,6 +11,8 @@ class MNAsolver {
 
         const VectorXcf solveSteady(const MatrixXcf& A, const VectorXcf& z) const;
 
+        void setCurrents(const std::map<std::string,int>& node_voltages_, const std::list<shared_ptr<Componennt>>& components) const;
+
     private:
         MatrixXcf test = MatrixXcf::Zero(3,3);
 

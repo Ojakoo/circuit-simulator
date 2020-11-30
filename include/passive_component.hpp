@@ -21,4 +21,10 @@ class PassiveComponent : public Component {
 
         ComponentClass GetClass() const;
 
+        float GetCurrent() const;
+        void SetCurrent(float value);
+
+    private:
+        float current_;
+
 };

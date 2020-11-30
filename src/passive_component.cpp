@@ -10,3 +10,10 @@ PassiveComponent::PassiveComponent(const std::string &name,
 ComponentClass PassiveComponent::GetClass() const {
     return PASSIVE;
 };
+
+float PassiveComponent::GetCurrent() const{
+    return current_;
+}
+void PassiveComponent::SetCurrent(float value){
+    current_ = value;
+}
