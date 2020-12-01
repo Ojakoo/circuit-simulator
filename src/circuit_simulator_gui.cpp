@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <algorithm>
+#include <fstream>
 
 #include "ImGuiFileBrowser.h"
 
@@ -106,7 +107,34 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
 }
 
 void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
-    std::cout << file << std::endl;
+    std::ofstream save_file;
+    save_file.open(file);
+    for ( auto comp : components_ ) {
+        switch (comp->GetType()) {
+            case RESISTOR:
+                save_file << "R ";
+                break;
+            case CAPACITOR:
+                save_file << "C ";
+                break;
+            case INDUCTOR:
+                save_file << "C ";
+                break;
+            case DC_VOLTAGE_SOURCE:
+                save_file << "V ";
+                break;
+            default:
+                break;
+        }
+        auto in = comp->GetTerminalNode(INPUT);
+        auto out = comp->GetTerminalNode(OUTPUT);
+        save_file << comp->GetName() << " "
+                  << (in ? in->GetName() : "-") << " "
+                  << (out ? out->GetName() : "-") << " "
+                  << comp->GetValue() << std::endl;
+    }
+    save_file.close();
+    std::cout << "Netlist saved into : " << file << "." << std::endl;
 }
 
 
