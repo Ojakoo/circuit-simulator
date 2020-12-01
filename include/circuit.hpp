@@ -18,6 +18,8 @@ public:
     const int GetNodeCount() const;
     const int GetSourceCount() const;
     const int GetVoltageSourceCount() const;
+    const std::map<std::string, int> GetNodeIndexes() const;
+    const std::map<std::string, int> GetVoltageSourceIndexes() const;
     const std::shared_ptr<Node> AddNode(const std::string& node_name);
     void AddComponent(std::shared_ptr<Component> component);
     void ConstructMatrices();

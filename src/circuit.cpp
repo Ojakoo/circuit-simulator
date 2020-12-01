@@ -145,6 +145,14 @@ const int Circuit::GetVoltageSourceCount() const {
     return m_;
 }
 
+const std::map<std::string, int> Circuit::GetNodeIndexes() const {
+    return node_indexes_;
+}
+
+const std::map<std::string, int> Circuit::GetVoltageSourceIndexes() const {
+    return voltage_source_indexes_;
+}
+
 const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     auto it = nodes_.find(node_name);
     if (it == nodes_.end()) {

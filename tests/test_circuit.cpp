@@ -103,7 +103,6 @@ SCENARIO("Producing A and z matrix from circuit with resistors") {
 
 SCENARIO("Producing matrices") {
     GIVEN("Circuit with multiple sources and resistors") {
-        std::cout << "hello" << std::endl;
 
         Circuit c = Circuit();
         
@@ -113,7 +112,7 @@ SCENARIO("Producing matrices") {
         std::shared_ptr<Node> g = c.AddNode("0");
 
         std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 6, g, n1);
-        std::shared_ptr<DCVoltageSource> s2 = std::make_shared<DCVoltageSource>("S2", 2, n2, n3);
+        std::shared_ptr<DCVoltageSource> s2 = std::make_shared<DCVoltageSource>("S2", 4, n2, n3);
         std::shared_ptr<DCCurrentSource> s3 = std::make_shared<DCCurrentSource>("S3", 5, n1, n2);
 
         std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n2, g);
@@ -127,8 +126,6 @@ SCENARIO("Producing matrices") {
         c.AddComponent(s2);
         c.AddComponent(s3);
 
-        std::cout << c << std::endl;
-
         Eigen::MatrixXcf RefA = MatrixXcf::Zero(5, 5);
 
         RefA << cd(2,0), cd(-2,0), cd(0,0), cd(1,0), cd(0,0),
@@ -137,13 +134,9 @@ SCENARIO("Producing matrices") {
                 cd(1,0), cd(0,0), cd(0,0), cd(0,0), cd(0,0),
                 cd(0,0), cd(-1,0), cd(1,0), cd(0,0), cd(0,0);
 
-        std::cout << RefA << std::endl;
-
         Eigen::VectorXf Refz = MatrixXf::Zero(5, 1);
 
-        Refz << -5, 5, 0, 6, 2;
-
-        std::cout << Refz << std::endl;
+        Refz << -5, 5, 0, 6, 4;
 
         WHEN("") {
             c.ConstructMatrices();
