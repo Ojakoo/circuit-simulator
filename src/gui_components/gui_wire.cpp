@@ -3,6 +3,7 @@
 #include "gui_components/gui_wire.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 GUIWire::GUIWire(Circuit &circuit) : circuit_(circuit), sf::VertexArray(sf::LineStrip, 1) { }
 
@@ -33,4 +34,21 @@ const std::shared_ptr<Node> GUIWire::GetNode() const {
 
 void GUIWire::ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType type) {
     components_[type].push_back(comp);
+}
+
+std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GUIWire::GetComponents() {
+    return components_;
+}
+
+void GUIWire::DisconnectComponent(std::shared_ptr<GUIComponent> comp) {
+    for ( auto pair : components_ ) {
+        auto c = std::find(pair.second.begin(), pair.second.end(), comp);
+        if (c != pair.second.end()) {
+            (*c)->RemoveWire(pair.first, circuit_);
+            if( (*c)->GetWireCount(pair.first) <= 0 ) {
+                node_ = nullptr;
+            }
+            pair.second.erase(c);
+        }
+    }
 }

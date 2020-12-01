@@ -23,9 +23,9 @@ class GUIWire : public sf::VertexArray {
 
         void ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType type);
 
-        std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GetComponents() {
-            return components_;
-        }
+        void DisconnectComponent(std::shared_ptr<GUIComponent> comp);
+
+        std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GetComponents();
 
     private:
         std::shared_ptr<Node> node_ = nullptr;

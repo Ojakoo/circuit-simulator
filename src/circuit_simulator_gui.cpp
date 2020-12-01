@@ -245,6 +245,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     (*it)->rotate(90);
                                     break;
                                 case DELETING_ELEMENT:
+                                    for ( auto wire : wires_ ) {
+                                        wire->DisconnectComponent((*it));
+                                    }
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
                                     deleted = true;
