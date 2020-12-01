@@ -48,7 +48,7 @@ void CircuitSimulatorGUI::AddingWire(std::shared_ptr<GUIWire> wire) {
 std::list<std::shared_ptr<GUIWire>>::const_iterator CircuitSimulatorGUI::WireClick(sf::Vector2f mouse) const {
     auto it = wires_.begin();
     for ( ; it != wires_.end(); it++) {
-        for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {  // loop through every line formed by the vertex array
+        for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {
             auto P_1 = (*(*it))[i].position;
             auto P_2 = (*(*it))[i + 1].position;
             // https://stackoverflow.com/a/1501725
@@ -100,7 +100,6 @@ void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
     helper_lines_[2].position = sf::Vector2f(closest.x, 0);
     helper_lines_[3].position = sf::Vector2f(closest.x, this->getSize().y);
 }
-
 
 void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
     std::cout << file << std::endl;
@@ -286,9 +285,6 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     (*it)->rotate(90);
                                     break;
                                 case DELETING_ELEMENT:
-                                    for ( auto wire : wires_ ) {
-                                        wire->DisconnectComponent((*it));
-                                    }
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
                                     deleted = true;

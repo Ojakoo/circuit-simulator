@@ -39,16 +39,3 @@ void GUIWire::ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType 
 std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GUIWire::GetComponents() {
     return components_;
 }
-
-void GUIWire::DisconnectComponent(std::shared_ptr<GUIComponent> comp) {
-    for ( auto pair : components_ ) {
-        auto c = std::find(pair.second.begin(), pair.second.end(), comp);
-        if (c != pair.second.end()) {
-            (*c)->RemoveWire(pair.first, circuit_);
-            if( (*c)->GetWireCount(pair.first) <= 0 ) {
-                node_ = nullptr;
-            }
-            pair.second.erase(c);
-        }
-    }
-}
