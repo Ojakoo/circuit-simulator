@@ -31,6 +31,7 @@ SCENARIO("MNA solver calculates correctly") {
 
         Refx << cd(-2,0), cd(4,0), cd(5,0), cd(-6,0);
 
+
         WHEN("") {
             MNAsolver solver = MNAsolver();
 

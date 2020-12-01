@@ -1,3 +1,5 @@
+#include <map>
+
 #include "MNAsolver.hpp"
 
 MNAsolver::MNAsolver(){}

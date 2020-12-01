@@ -32,7 +32,9 @@ private:
     VectorXf z_;
     std::map<std::string, std::shared_ptr<Node>> nodes_;
     std::map<std::string, int> node_indexes_;
-    std::map<int, std::shared_ptr<Component>> v_source_indexes;
+    std::map<std::string, int> voltage_source_indexes_;
+    std::map<std::string, float> node_voltages_;
+    std::map<std::string, float> voltage_source_currents_;
     std::list<std::shared_ptr<Component>> components_;
 };
 

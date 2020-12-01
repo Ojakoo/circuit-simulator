@@ -12,8 +12,9 @@ void Circuit::RemoveComponent(std::shared_ptr<Component> component) {
 void Circuit::ConstructMatrices() {
     //generate index map based on nodes
     node_indexes_.clear();
+    voltage_source_indexes_.clear();
     int node_count = 0;
-    int v_sources = 0;
+    int voltage_sources_count = 0;
 
     int omega = 0.0;  // DC circuit
 
@@ -36,6 +37,7 @@ void Circuit::ConstructMatrices() {
 
         ComponentType type = component->GetType();
         ComponentClass cls = component->GetClass();
+        std::string name = component->GetName();
 
         std::string out_name = out->GetName();
         std::string in_name = in->GetName();
@@ -89,19 +91,22 @@ void Circuit::ConstructMatrices() {
                 */
                 switch ( type ) {
                     case DC_VOLTAGE_SOURCE:
+                        if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
+                            //if voltage source is not mapped map it for future reference
+                            voltage_source_indexes_[name] = node_count + voltage_sources_count;
+                            voltage_sources_count++;
+                        }
                         if ( out->GetType() != GROUND ) {
                             // output terminal is connected to some node
-                            A_(n_, node_indexes_[out_name]) = 1;  // append value to B submatrix
-                            A_(node_indexes_[out_name], n_) = 1;  // append value to C submatrix
+                            A_(voltage_source_indexes_[name], node_indexes_[out_name]) = 1;  // append value to B submatrix
+                            A_(node_indexes_[out_name], voltage_source_indexes_[name]) = 1;  // append value to C submatrix
                         }
                         if ( in->GetType() != GROUND ) {
                             // input terminal is connected to some node
-                            A_(n_, node_indexes_[in_name]) = -1;  // append value to B submatrix
-                            A_(node_indexes_[in_name], n_) = -1;  // append value to C submatrix
+                            A_(voltage_source_indexes_[name], node_indexes_[in_name]) = -1;  // append value to B submatrix
+                            A_(node_indexes_[in_name], voltage_source_indexes_[name]) = -1;  // append value to C submatrix
                         }
-                        v_source_indexes[v_sources] = component;
-                        z_(n_ + v_sources) = component->GetValue();
-                        v_sources++;
+                        z_(voltage_source_indexes_[name]) = component->GetValue();
                         break;
                     case DC_CURRENT_SOURCE:
                         if ( out->GetType() != GROUND ) {
