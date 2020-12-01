@@ -131,7 +131,20 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
         save_file << comp->GetName() << " "
                   << (in ? in->GetName() : "-") << " "
                   << (out ? out->GetName() : "-") << " "
-                  << comp->GetValue() << std::endl;
+                  << comp->GetValue() << " "
+                  << comp->getPosition().x << " "
+                  << comp->getPosition().y << " "
+                  << comp->getRotation() << std::endl;
+    }
+    for ( auto wire : wires_ ) {
+        auto node = wire->GetNode();
+        save_file << "W " << (node ? node->GetName() : "-") << " " << wire->getVertexCount() << std::endl;
+        for (int i = 0; i < wire->getVertexCount(); i++) {
+            save_file << (*wire)[i].position.x << " " << (*wire)[i].position.y << std::endl;
+        } 
+    }
+    for ( auto gnd : grounds_ ) {
+        save_file << "G " << gnd->getPosition().x << " " << gnd->getPosition().y << std::endl;
     }
     save_file.close();
     std::cout << "Netlist saved into : " << file << "." << std::endl;
