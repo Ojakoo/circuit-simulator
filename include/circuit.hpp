@@ -18,6 +18,8 @@ public:
     const int GetNodeCount() const;
     const int GetSourceCount() const;
     const int GetVoltageSourceCount() const;
+    const std::map<std::string, int> GetNodeIndexes() const;
+    const std::map<std::string, int> GetVoltageSourceIndexes() const;
     const std::shared_ptr<Node> AddNode(const std::string& node_name);
     void AddComponent(std::shared_ptr<Component> component);
     void ConstructMatrices();
@@ -32,7 +34,9 @@ private:
     VectorXf z_;
     std::map<std::string, std::shared_ptr<Node>> nodes_;
     std::map<std::string, int> node_indexes_;
-    std::map<int, std::shared_ptr<Component>> v_source_indexes;
+    std::map<std::string, int> voltage_source_indexes_;
+    std::map<std::string, float> node_voltages_;
+    std::map<std::string, float> voltage_source_currents_;
     std::list<std::shared_ptr<Component>> components_;
 };
 
