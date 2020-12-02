@@ -143,13 +143,13 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
         iss >> type;
         if (!iss) {
             // Check that reading succeeded
-            std::cout << type << std::endl;
             throw std::runtime_error("Error while reading netlist file.");
         }
         if (c.find(type) != c.end()) {
+            // Normal component
             iss >> name >> input_node >> output_node >> value >> x >> y >> rot;
-            std::shared_ptr<Node> in = circuit_.AddNode(input_node);
-            std::shared_ptr<Node> out = circuit_.AddNode(output_node);
+            auto in = circuit_.AddNode(input_node);
+            auto out = circuit_.AddNode(output_node);
             if ( type == "R" ) {
                 auto r = std::make_shared<GUIResistor>(name, value, in, out);
                 resistors_++;
@@ -176,6 +176,32 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
             auto comp = components_.back();
             comp->setRotation(rot);
             comp->setPosition(x, y);
+        } else if (type == "W") {
+            // Wire
+            std::string node;
+            int verticies;
+            iss >> node >> verticies;
+            auto w = std::make_shared<GUIWire>(circuit_);
+            auto n = circuit_.AddNode(node);
+            wires_.push_back(w);
+            w->SetNode(n);
+            w->resize(verticies);
+            for (int i = 0; i < verticies; i++) {
+                std::string line;
+                std::getline(ifstr, line);
+                std::stringstream iss(line);
+                float x, y;
+                iss >> x >> y;
+                (*w)[i].position = sf::Vector2f(x, y);
+                (*w)[i].color = sf::Color::Black;
+            }
+        } else if (type == "G") {
+            // Ground
+            float x, y;
+            iss >> x >> y;
+            auto g = std::make_shared<GUIGround>();
+            g->setPosition(x, y);
+            grounds_.push_back(g);
         }
     }
 
@@ -700,7 +726,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
             if (ImGui::MenuItem("Steady state analysis")) {
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
-                    std::cout << it.first << std::endl;
+                    std::cout << *(it.second) << std::endl;
                 }
             }
             if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
