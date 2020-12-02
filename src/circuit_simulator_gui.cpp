@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <fstream>
+#include <set>
 
 #include "ImGuiFileBrowser.h"
 
@@ -101,8 +102,84 @@ void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
     helper_lines_[3].position = sf::Vector2f(closest.x, this->getSize().y);
 }
 
+void CircuitSimulatorGUI::Reset() {
+    CancelAllActions();
+    circuit_ = Circuit();
+    resistors_ = 0;
+    inductors_ = 0;
+    capacitors_ = 0;
+    sources_ = 0;
+    nodes_ = 0;
+    components_.clear();
+    wires_.clear();
+    grounds_.clear();
+    zoom_ = 1;
+    popup_value_ = 0.0;
+}
+
 void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
-    std::cout << file << std::endl;
+    Reset();
+
+    std::ifstream ifstr(file);
+
+    if (ifstr.rdstate() & (ifstr.failbit | ifstr.badbit)) {
+        throw std::runtime_error("Failed to read netlist file.");
+    }
+
+    std::set<std::string> c = {"R", "L", "C", "V"};
+
+    while( !ifstr.eof() ) {
+        std::string line;
+        std::getline(ifstr, line);
+        std::stringstream iss(line);
+        std::string type;
+        std::string name;
+        std::string input_node;
+        std::string output_node;
+        float value;
+        float x;
+        float y;
+        float rot;
+        iss >> type;
+        if (!iss) {
+            // Check that reading succeeded
+            std::cout << type << std::endl;
+            throw std::runtime_error("Error while reading netlist file.");
+        }
+        if (c.find(type) != c.end()) {
+            iss >> name >> input_node >> output_node >> value >> x >> y >> rot;
+            std::shared_ptr<Node> in = circuit_.AddNode(input_node);
+            std::shared_ptr<Node> out = circuit_.AddNode(output_node);
+            if ( type == "R" ) {
+                auto r = std::make_shared<GUIResistor>(name, value, in, out);
+                resistors_++;
+                components_.push_back(r);
+                circuit_.AddComponent(r->GetComponent());
+            } else if ( type == "L" ) {
+                auto l = std::make_shared<GUIInductor>(name, value, in, out);
+                inductors_++;
+                components_.push_back(l);
+                circuit_.AddComponent(l->GetComponent());
+            } else if ( type == "C" ) {
+                auto cap = std::make_shared<GUICapacitor>(name, value, in, out);
+                capacitors_++;
+                components_.push_back(cap);
+                circuit_.AddComponent(cap->GetComponent());
+            } else if ( type == "V" ) {
+                auto v = std::make_shared<GUIVoltageSource>(name, value, in, out);
+                sources_++;
+                components_.push_back(v);
+                circuit_.AddComponent(v->GetComponent());
+            } else {
+                throw std::runtime_error("Invalid component type found in netlist.");
+            }
+            auto comp = components_.back();
+            comp->setRotation(rot);
+            comp->setPosition(x, y);
+        }
+    }
+
+    ifstr.close();
 }
 
 void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
