@@ -2,7 +2,7 @@
 
 #include "gui_components/gui_component.hpp"
 
-#include "dc_voltage_source.hpp"
+#include "voltage_source.hpp"
 
 
 class GUIVoltageSource : public GUIComponent {

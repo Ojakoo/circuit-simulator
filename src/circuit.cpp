@@ -90,7 +90,7 @@ void Circuit::ConstructMatrices() {
                 Construct B and C submatrices and z vector.
                 */
                 switch ( type ) {
-                    case DC_VOLTAGE_SOURCE:
+                    case VOLTAGE_SOURCE:
                         if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
                             //if voltage source is not mapped map it for future reference
                             voltage_source_indexes_[name] = node_count + voltage_sources_count;
@@ -108,7 +108,7 @@ void Circuit::ConstructMatrices() {
                         }
                         z_(voltage_source_indexes_[name]) = component->GetValue();
                         break;
-                    case DC_CURRENT_SOURCE:
+                    case CURRENT_SOURCE:
                         if ( out->GetType() != GROUND ) {
                             z_(node_indexes_[out_name]) += component->GetValue();
                         }
@@ -168,9 +168,9 @@ void Circuit::RemoveNode(const std::string& node_name) {
 
 void Circuit::AddComponent(std::shared_ptr<Component> component) {
     ComponentType type = component->GetType();
-    if (type == DC_VOLTAGE_SOURCE || type == DC_CURRENT_SOURCE) {
+    if (type == VOLTAGE_SOURCE || type == CURRENT_SOURCE) {
         i_++;
-        if (type == DC_VOLTAGE_SOURCE) {
+        if (type == VOLTAGE_SOURCE) {
             m_++;
         }
     }
