@@ -19,9 +19,9 @@ void Node::SetNodeType(NodeType type) {
 std::ostream &operator<<(std::ostream& out, const Node& node) {
     out << "\n" << node.GetName();
     if (node.GetType() == GROUND) {
-        out << "Type: Ground";
+        out << " Type: Ground";
     } else {
-        out << "Type: Normal";
+        out << " Type: Normal";
     }
     return out.flush();
 }

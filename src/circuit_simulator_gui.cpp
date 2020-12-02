@@ -132,6 +132,7 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
         std::string line;
         std::getline(ifstr, line);
         std::stringstream iss(line);
+        if (line.length() == 0) continue;
         std::string type;
         std::string name;
         std::string input_node;
@@ -197,9 +198,12 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
             }
         } else if (type == "G") {
             // Ground
+            std::string node;
             float x, y;
-            iss >> x >> y;
+            iss >> node >> x >> y;
+            auto n = circuit_.AddNode(node);
             auto g = std::make_shared<GUIGround>();
+            g->SetNode(n);
             g->setPosition(x, y);
             grounds_.push_back(g);
         }
@@ -246,7 +250,9 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
         } 
     }
     for ( auto gnd : grounds_ ) {
-        save_file << "G " << gnd->getPosition().x << " " << gnd->getPosition().y << std::endl;
+        save_file << "G " << gnd->GetNode()->GetName() << " "
+                          << gnd->getPosition().x << " "
+                          << gnd->getPosition().y << std::endl;
     }
     save_file.close();
     std::cout << "Netlist saved into : " << file << "." << std::endl;
@@ -413,7 +419,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 nodes_++;
                                 clicked_component->ConnectNodeToTerminal(pair.first, node);
                             }
-                            clicked_component->GetTerminalNode(pair.first)->SetNodeType(GROUND);
+                            addingGround_->SetNode(clicked_component->GetTerminalNode(pair.first));
                             addingGround_->setPosition(pair.second);
                             addingGround_ = nullptr;
                             CancelAllActions();
@@ -426,7 +432,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     nodes_++;
                                     (*it)->SetNode(node);
                                 }
-                                (*it)->GetNode()->SetNodeType(GROUND);
+                                addingGround_->SetNode((*it)->GetNode());
                                 addingGround_ = nullptr;
                                 CancelAllActions();
                             }
