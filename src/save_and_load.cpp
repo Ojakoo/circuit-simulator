@@ -97,8 +97,7 @@ Circuit LoadNetList(const std::string& file_name) {
 
             std::shared_ptr<Node> in = circuit.AddNode(input_node);
             std::shared_ptr<Node> out = circuit.AddNode(output_node);
-            
-            iss >> type >> name >> input_node >> output_node >> value;
+        
             if ( type == "R" ) {
                 std::shared_ptr<Resistor> R = std::make_shared<Resistor>(name, value, in, out);
                 circuit.AddComponent(R);

@@ -162,6 +162,10 @@ const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     return nodes_[node_name];
 }
 
+void Circuit::RemoveNode(const std::string& node_name) {
+    nodes_.erase(node_name);
+}
+
 void Circuit::AddComponent(std::shared_ptr<Component> component) {
     ComponentType type = component->GetType();
     if (type == DC_VOLTAGE_SOURCE || type == DC_CURRENT_SOURCE) {

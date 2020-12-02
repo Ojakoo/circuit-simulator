@@ -53,11 +53,6 @@ void GUIComponent::SetValue(float newval) {
     component_->SetValue(newval);
 }
 
-void GUIComponent::Disconnect() {
-    input_connected_ = false;
-    output_connected_ = false;
-}
-
 void GUIComponent::DrawInfo(sf::RenderWindow &window) const {
     sf::Font font;
     if (font.loadFromFile("../fonts/arial.ttf"))
@@ -81,10 +76,10 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) const {
 }
 
 void GUIComponent::DrawTerminalRects(sf::RenderWindow &window) {
-    if (input_connected_) {
+    if (component_->GetTerminalNode(INPUT)) {
         window.draw(input_rect_);
     }
-    if (output_connected_) {
+    if (component_->GetTerminalNode(OUTPUT)) {
         window.draw(output_rect_);
     }
 }
@@ -92,12 +87,36 @@ void GUIComponent::DrawTerminalRects(sf::RenderWindow &window) {
 void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
     switch ( terminal ) {
         case INPUT:
-            input_connected_ = true;
             input_rect_.setPosition(coords);
             break;
         case OUTPUT:
-            output_connected_ = true;
             output_rect_.setPosition(coords);
             break;
     }
+}
+
+void GUIComponent::ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node) {
+    component_->ConnectNodeToTerminal(node, terminal);
+}
+
+std::shared_ptr<Node> GUIComponent::GetTerminalNode(TerminalType terminal) const {
+    return component_->GetTerminalNode(terminal);
+}
+
+void GUIComponent::ConnectWire(TerminalType terminal) {
+    connected_wires_[terminal] += 1;
+}
+
+void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
+    connected_wires_[terminal] -= 1;
+    if (connected_wires_[terminal] <= 0) {
+        // disconnect and remove from circuit
+        circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
+        ConnectNodeToTerminal(terminal, nullptr);
+        connected_wires_[terminal] = 0;
+    }
+}
+
+const int GUIComponent::GetWireCount(TerminalType terminal) {
+    return connected_wires_[terminal];
 }
