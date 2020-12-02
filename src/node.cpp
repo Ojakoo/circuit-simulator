@@ -15,3 +15,13 @@ const NodeType Node::GetType() const {
 void Node::SetNodeType(NodeType type) {
     type_ = type;
 }
+
+std::ostream &operator<<(std::ostream& out, const Node& node) {
+    out << "\n" << node.GetName();
+    if (node.GetType() == GROUND) {
+        out << "Type: Ground";
+    } else {
+        out << "Type: Normal";
+    }
+    return out.flush();
+}
