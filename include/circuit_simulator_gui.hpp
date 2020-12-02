@@ -65,7 +65,10 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::list<std::shared_ptr<GUIWire>>::const_iterator WireClick(sf::Vector2f mouse) const;
 
         void LoadCircuit(std::string &file);
+        
         void SaveCircuit(std::string &file);
+
+        void Reset();
     
     private:
         Circuit circuit_;
@@ -85,7 +88,7 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         std::shared_ptr<GUIComponent> movingComponent_ = nullptr;  // pointer to component being moved
         std::shared_ptr<GUIComponent> addingComponent_ = nullptr;  // pointer to component being added
         std::shared_ptr<GUIComponent> editingComponent_ = nullptr;  // pointer to component being edited
-        std::shared_ptr<GUIGround> addingGround_ = nullptr;
+        std::shared_ptr<GUIGround> addingGround_ = nullptr;  // pointer to ground being added
         std::shared_ptr<GUIWire> addingWire_ = nullptr;  // pointer to wire being added
         float zoom_ = 1;  // current zoom of view
         sf::Cursor cursor_;
