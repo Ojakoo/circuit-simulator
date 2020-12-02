@@ -1,20 +1,20 @@
-#include "dc_current_source.hpp"
+#include "current_source.hpp"
 
-DCCurrentSource::DCCurrentSource(const std::string &name,
+CurrentSource::CurrentSource(const std::string &name,
                                 float current,
                                 std::shared_ptr<Node> input,
                                 std::shared_ptr<Node> output)
     : ActiveComponent(name, input, output), current_(current) { }
 
 
-float DCCurrentSource::GetValue() const {
+float CurrentSource::GetValue() const {
     return current_;
 }
 
-void DCCurrentSource::SetValue(float newval) {
+void CurrentSource::SetValue(float newval) {
     current_ = newval;
 }
 
-ComponentType DCCurrentSource::GetType() const {
-    return DC_CURRENT_SOURCE;
+ComponentType CurrentSource::GetType() const {
+    return CURRENT_SOURCE;
 }

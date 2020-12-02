@@ -226,7 +226,7 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
             case INDUCTOR:
                 save_file << "C ";
                 break;
-            case DC_VOLTAGE_SOURCE:
+            case VOLTAGE_SOURCE:
                 save_file << "V ";
                 break;
             default:
@@ -507,7 +507,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             case INDUCTOR:
                                 inductors_++;
                                 break;
-                            case DC_VOLTAGE_SOURCE:
+                            case VOLTAGE_SOURCE:
                                 sources_++;
                                 break;
                             default:
