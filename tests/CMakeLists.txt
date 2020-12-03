@@ -17,3 +17,6 @@ add_test(NAME admittance COMMAND admittance)
 
 add_executable(circuit test_circuit.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME circuit COMMAND circuit)
+
+add_executable(MNAsolver test_MNAsolver.cpp $<TARGET_OBJECTS:test_main>)
+add_test(NAME MNAsolver COMMAND MNAsolver)

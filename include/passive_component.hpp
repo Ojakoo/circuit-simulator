@@ -21,10 +21,10 @@ class PassiveComponent : public Component {
 
         ComponentClass GetClass() const;
 
-        float GetCurrent() const;
-        void SetCurrent(float value);
+        std::complex<float> GetCurrent() const;
+        void SetCurrent(std::complex<float> value);
 
     private:
-        float current_;
+        std::complex<float> current_;
 
 };

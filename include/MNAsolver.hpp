@@ -1,19 +1,30 @@
 #pragma once
 
 #include <iostream>
+#include <complex>
+#include <map>
+
 #include "Eigen/Dense"
 
 using namespace Eigen;
 
+typedef std::complex<float> cd;
+
 class MNAsolver {
     public:
         MNAsolver();
+        void solveSteady(const MatrixXcf& A, const VectorXcf& z, std::map<std::string, int> node_indexes_, std::map<std::string, int> voltage_source_indexes_);
+        const VectorXcf GetxVector() const;
+        const std::map<std::string, cd> GetNodeVoltages() const;
+        const std::map<std::string, cd> GetVoltageSourceCurrents() const;
 
-        const VectorXcf solveSteady(const MatrixXcf& A, const VectorXcf& z) const;
-
-        void setCurrents(const std::map<std::string,int>& node_voltages_, const std::list<shared_ptr<Componennt>>& components) const;
+        void setCurrents(const std::list<shared_ptr<Componennt>>& components) const;
 
     private:
         MatrixXcf test = MatrixXcf::Zero(3,3);
-
+        VectorXcf x_;
+        std::map<std::string, cd> node_voltages_;
+        std::map<std::string, cd> voltage_source_currents_;
 };
+
+std::ostream &operator<<(std::ostream& out, const MNAsolver& solver);

@@ -1,11 +1,15 @@
 #pragma once
 
 #include <string>
+#include <list>
+#include <map>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include "SFML/Graphics/RectangleShape.hpp"
+
+#include "circuit.hpp"
 
 #include "component.hpp"
 
@@ -37,14 +41,20 @@ class GUIComponent : public sf::Sprite {
 
         void SetTerminalRects(TerminalType terminal, sf::Vector2f coords);
 
-        void Disconnect();
-        
+        void ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node);
+
+        std::shared_ptr<Node> GetTerminalNode(TerminalType terminal) const;
+
+        void ConnectWire(TerminalType terminal);
+
+        void RemoveWire(TerminalType terminal, Circuit &circuit);
+
+        const int GetWireCount(TerminalType terminal);
 
     private:
         sf::Texture tx_;  // holds pointer for texture
         std::shared_ptr<Component> component_;
-        bool input_connected_ = false;
-        bool output_connected_ = false;
         sf::RectangleShape input_rect_;
         sf::RectangleShape output_rect_;
+        std::map<TerminalType, int> connected_wires_;
 };

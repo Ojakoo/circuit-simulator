@@ -16,8 +16,12 @@ class ActiveComponent : public Component {
         ActiveComponent(
             const std::string& name,
             std::shared_ptr<Node> input,
-            std::shared_ptr<Node> output
+            std::shared_ptr<Node> output,
+            float freq = 0.0
         );
 
         ComponentClass GetClass() const;
+    
+    private:
+        float freq_;
 };

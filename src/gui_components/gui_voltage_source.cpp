@@ -9,4 +9,4 @@ GUIVoltageSource::GUIVoltageSource(const std::string& name,
                         std::shared_ptr<Node> input,
                         std::shared_ptr<Node> output,
                         const std::string& texture)
-    : GUIComponent(texture, std::make_shared<DCVoltageSource>(name, voltage, input, output)) { }
+    : GUIComponent(texture, std::make_shared<VoltageSource>(name, voltage, input, output)) { }

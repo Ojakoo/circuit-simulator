@@ -11,9 +11,9 @@ ComponentClass PassiveComponent::GetClass() const {
     return PASSIVE;
 };
 
-float PassiveComponent::GetCurrent() const{
+std::complex<float> PassiveComponent::GetCurrent() const{
     return current_;
 }
-void PassiveComponent::SetCurrent(float value){
+void PassiveComponent::SetCurrent(std::complex<float> value){
     current_ = value;
 }

@@ -1,5 +1,6 @@
 #include <string>
 #include <complex>
+#include <iostream>
 
 #include "doctest.h"
 #include "circuit.hpp"
@@ -7,8 +8,8 @@
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
-#include "dc_voltage_source.hpp"
-#include "dc_current_source.hpp"
+#include "voltage_source.hpp"
+#include "current_source.hpp"
 #include "node.hpp"
 #include "save_and_load.hpp"
 #include "Eigen/Dense"
@@ -52,9 +53,9 @@ SCENARIO("Producing A and z matrix from circuit with resistors") {
         std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R2", 0.5, n2, g);
         std::shared_ptr<Resistor> r3 = std::make_shared<Resistor>("R3", 0.5, n2, n3);
 
-        std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 6, n1, n2);
-        std::shared_ptr<DCCurrentSource> s2 = std::make_shared<DCCurrentSource>("S2", 2, n3, n1);
-        std::shared_ptr<DCCurrentSource> s3 = std::make_shared<DCCurrentSource>("S3", 4, g, n3);
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 6, n1, n2);
+        std::shared_ptr<CurrentSource> s2 = std::make_shared<CurrentSource>("S2", 2, n3, n1);
+        std::shared_ptr<CurrentSource> s3 = std::make_shared<CurrentSource>("S3", 4, g, n3);
 
         c.AddComponent(r1);
         c.AddComponent(r2);
@@ -96,6 +97,67 @@ SCENARIO("Producing A and z matrix from circuit with resistors") {
                 CHECK(z.isApprox(Refz));
                 CHECK(A.isApprox(RefA));
             }
+        }
+    }
+}
+
+SCENARIO("Producing matrices") {
+    GIVEN("Circuit with multiple sources and resistors") {
+
+        Circuit c = Circuit();
+        
+        std::shared_ptr<Node> n1 = c.AddNode("N001");
+        std::shared_ptr<Node> n2 = c.AddNode("N002");
+        std::shared_ptr<Node> n3 = c.AddNode("N003");
+        std::shared_ptr<Node> g = c.AddNode("0");
+
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 6, g, n1);
+        std::shared_ptr<VoltageSource> s2 = std::make_shared<VoltageSource>("S2", 4, n2, n3);
+        std::shared_ptr<CurrentSource> s3 = std::make_shared<CurrentSource>("S3", 5, n1, n2);
+
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n2, g);
+        std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n1, n2);
+        std::shared_ptr<Resistor> r3 = std::make_shared<Resistor>("R3", 0.5, n3, g);
+
+        c.AddComponent(r1);
+        c.AddComponent(r2);
+        c.AddComponent(r3);
+        c.AddComponent(s1);
+        c.AddComponent(s2);
+        c.AddComponent(s3);
+
+        Eigen::MatrixXcf RefA = MatrixXcf::Zero(5, 5);
+
+        RefA << cd(2,0), cd(-2,0), cd(0,0), cd(1,0), cd(0,0),
+                cd(-2,0), cd(4,0),  cd(0,0), cd(0,0), cd(-1,0),
+                cd(0,0), cd(0,0), cd(2,0), cd(0,0), cd(1,0),
+                cd(1,0), cd(0,0), cd(0,0), cd(0,0), cd(0,0),
+                cd(0,0), cd(-1,0), cd(1,0), cd(0,0), cd(0,0);
+
+        Eigen::VectorXf Refz = MatrixXf::Zero(5, 1);
+
+        Refz << -5, 5, 0, 6, 4;
+
+        WHEN("") {
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("Matricies are the right size") {
+                CHECK(A.rows() == 5);
+                CHECK(A.cols() == 5);
+                CHECK(z.rows() == 5);
+                CHECK(z.cols() == 1);
+            }
+
+            THEN("Matrix is built right") {
+                CHECK(z.isApprox(Refz));
+                CHECK(A.isApprox(RefA));
+            }
+
+            std::cout << "z:\n" << z << "\n\n" << "A\n" << A << std::endl;
+            //std::cout << "node_indexes_:\n" << c.node_indexes_ << "\n\nvoltage_indexes_:\n" << c.source_indexes_ << std::endl;
         }
     }
 }
@@ -147,7 +209,7 @@ SCENARIO("Testing matrix construction when component is not connected") {
         std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 0.5);
         r1->ConnectNodeToTerminal(n1, INPUT);
 
-        std::shared_ptr<DCVoltageSource> V1 = std::make_shared<DCVoltageSource>("S1", 6, g, n1);
+        std::shared_ptr<VoltageSource> V1 = std::make_shared<VoltageSource>("S1", 6, g, n1);
         
         c.AddComponent(r1);
         c.AddComponent(V1);

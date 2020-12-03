@@ -1,20 +1,20 @@
-#include "dc_voltage_source.hpp"
+#include "voltage_source.hpp"
 
-DCVoltageSource::DCVoltageSource(const std::string &name,
+VoltageSource::VoltageSource(const std::string &name,
                                 float voltage,
                                 std::shared_ptr<Node> input,
                                 std::shared_ptr<Node> output)
     : ActiveComponent(name, input, output), voltage_(voltage) { }
 
 
-float DCVoltageSource::GetValue() const {
+float VoltageSource::GetValue() const {
     return voltage_;
 }
 
-void DCVoltageSource::SetValue(float newval) {
+void VoltageSource::SetValue(float newval) {
     voltage_ = newval;
 }
 
-ComponentType DCVoltageSource::GetType() const {
-    return DC_VOLTAGE_SOURCE;
+ComponentType VoltageSource::GetType() const {
+    return VOLTAGE_SOURCE;
 }

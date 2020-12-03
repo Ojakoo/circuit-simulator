@@ -1,18 +1,53 @@
+#include <map>
+
 #include "MNAsolver.hpp"
 
 MNAsolver::MNAsolver(){}
 
-const VectorXcf MNAsolver::solveSteady(const MatrixXcf& A, const VectorXcf& z) const{
-    return A.inverse()*z;
+void MNAsolver::solveSteady(const MatrixXcf& A, const VectorXcf& z, std::map<std::string, int> node_indexes, std::map<std::string, int> voltage_source_indexes) {
+    x_ = A.inverse()*z;
+    node_voltages_.clear();
+    voltage_source_currents_.clear();
+
+    for ( auto const& i : node_indexes ) {
+        node_voltages_[ i.first ] = x_( i.second );
+    }
+    for ( auto const& i : voltage_source_indexes ) {
+        voltage_source_currents_[ i.first ] = x_( i.second );
+    }
 }
 
-void MNAsolver::setCurrents(const std::map<std::string,float>& node_voltages_, const std::list<shared_ptr<Componennt>>& components) const{
+const VectorXcf MNAsolver::GetxVector() const {
+    return x_;
+}
+
+const std::map<std::string, cd> MNAsolver::GetNodeVoltages() const {
+    return node_voltages_;
+}
+
+const std::map<std::string, cd> MNAsolver::GetVoltageSourceCurrents() const {
+    return voltage_source_currents_;
+}
+
+std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
+    out << "\nnode voltages";
+    for ( auto it : solver.GetNodeVoltages() ) {
+        out << "\n" << it.first << " " << it.second;
+    }
+    out << "\nvoltage source currents";
+    for ( auto it : solver.GetVoltageSourceCurrents() ) {
+        out << "\n" << it.first << " " << it.second;
+    }
+    return out.flush();
+}
+
+
+void MNAsolver::setCurrents( const std::list<shared_ptr<Componennt>>& components) const{
     
     
     for ( auto const& component : components_ ){
         std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
         std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
-
 
         ComponentType type = component->GetType();
         ComponentClass cls = component->GetClass();
@@ -20,10 +55,10 @@ void MNAsolver::setCurrents(const std::map<std::string,float>& node_voltages_, c
         std::string out_name = out->GetName();
         std::string in_name = in->GetName();
 
-        float out_value = node_voltage_[out_name];
-        float in_value = node_voltage_[in_name];
+        std::complex<float> out_value = node_voltage_[out_name];
+        std::complex<float> in_value = node_voltage_[in_name];
 
-        float V_difference = in_value - out_value;
+        std::complex<float> V_difference = in_value - out_value;
 
 
         std::complex<float> admittance;
@@ -31,36 +66,44 @@ void MNAsolver::setCurrents(const std::map<std::string,float>& node_voltages_, c
         switch ( cls ) {
             case PASSIVE:
                 /*
-                Construct G submatrix.
+                Calculating currents only for passive components
                 */
                 switch ( type ) {
                     case RESISTOR:
                         admittance = std::complex<float>(
                             1 / component->GetValue(), 0
                         );  // Y = 1 / Z = 1 / R
+                        std::complex<float> current = V_difference * admittance;
+                        component->SetCurrent(current);
                         break;
                     case CAPACITOR:
-                        if (omega)
+                        if (omega){
                             admittance = std::complex<float>(
                                 0, component->GetValue() * omega
                             );  // Y = 1 / Z = j*w*C
+                            std::complex<float> current = V_difference * admittance;
+                            component->SetCurrent(current);
+                        }else{
+                            component->SetCurrent((0,0));
+                        }
                         break;
-                    case INDUCTOR:
-                        if (omega)
+                    case INDUCTOR://??
+                        if (omega){
                             admittance = std::complex<float>(
                                 0, 1 / (component->GetValue() * omega)
                             );  // Y = 1 / Z = 1 / (j*w*L)
+                        }else{
+                            component->SetCurrent((0,0));
+                        }
                         break;
                     default:
                         break;
                 }
-                float current = V_difference * admittance
-
-                component->SetCurrent(current) 
+                 
                 
                 
                 break;
-            case ACTIVE:
+            case ACTIVE: //do nothing
             /*
                 switch ( type ) {
                     case DC_VOLTAGE_SOURCE:

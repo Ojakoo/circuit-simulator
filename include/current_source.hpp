@@ -3,10 +3,10 @@
 #include "active_component.hpp"
 
 
-class DCVoltageSource : public ActiveComponent {
+class CurrentSource : public ActiveComponent {
     public:
-        DCVoltageSource(const std::string& name,
-                        float voltage = 0,
+        CurrentSource(const std::string& name,
+                        float current = 0,
                         std::shared_ptr<Node> input = nullptr,
                         std::shared_ptr<Node> output = nullptr);
 
@@ -17,5 +17,5 @@ class DCVoltageSource : public ActiveComponent {
         ComponentType GetType() const;
 
     private:
-        float voltage_;  // volts
+        float current_;  // amperes
 };

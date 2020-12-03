@@ -13,8 +13,8 @@ enum ComponentType {
     RESISTOR,
     INDUCTOR,
     CAPACITOR,
-    DC_VOLTAGE_SOURCE,
-    DC_CURRENT_SOURCE
+    VOLTAGE_SOURCE,
+    CURRENT_SOURCE
 };
 
 
