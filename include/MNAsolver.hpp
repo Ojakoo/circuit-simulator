@@ -1,9 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <complex>
 #include <map>
+#include <list>
 
+#include "component.hpp"
+#include "node.hpp"
+#include "circuit.hpp"
 #include "Eigen/Dense"
 
 using namespace Eigen;
@@ -18,7 +21,7 @@ class MNAsolver {
         const std::map<std::string, cd> GetNodeVoltages() const;
         const std::map<std::string, cd> GetVoltageSourceCurrents() const;
 
-        void setCurrents(const std::list<shared_ptr<Componennt>>& components) const;
+        void setCurrents(const std::list<std::shared_ptr<Component>> components) const;
 
     private:
         MatrixXcf test = MatrixXcf::Zero(3,3);

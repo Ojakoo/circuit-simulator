@@ -1,4 +1,3 @@
-#include <map>
 
 #include "MNAsolver.hpp"
 
@@ -42,10 +41,10 @@ std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
 }
 
 
-void MNAsolver::setCurrents( const std::list<shared_ptr<Componennt>>& components) const{
+void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components) const{
+    int omega = 0.0;//dc circuit
     
-    
-    for ( auto const& component : components_ ){
+    for ( auto const& component : components ){
         std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
         std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
 
@@ -55,8 +54,8 @@ void MNAsolver::setCurrents( const std::list<shared_ptr<Componennt>>& components
         std::string out_name = out->GetName();
         std::string in_name = in->GetName();
 
-        std::complex<float> out_value = node_voltage_[out_name];
-        std::complex<float> in_value = node_voltage_[in_name];
+        std::complex<float> out_value = node_voltages_[out_name];
+        std::complex<float> in_value = node_voltages_[in_name];
 
         std::complex<float> V_difference = in_value - out_value;
 
