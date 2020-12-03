@@ -18,6 +18,8 @@ public:
     const int GetNodeCount() const;
     const int GetSourceCount() const;
     const int GetVoltageSourceCount() const;
+    const float GetOmega() const { return omega_; };
+    void SetOmega( float omega ) { omega_ = omega; };
     const std::map<std::string, int> GetNodeIndexes() const;
     const std::map<std::string, int> GetVoltageSourceIndexes() const;
     const std::shared_ptr<Node> AddNode(const std::string& node_name);
@@ -30,6 +32,7 @@ private:
     int i_ = 0; // number of sources
     int n_ = 0; // number of nodes (excluding ground node)
     int m_ = 0; // number of voltage sources
+    float omega_ = 0; // default omega
     MatrixXcf A_;
     VectorXf z_;
     std::map<std::string, std::shared_ptr<Node>> nodes_;

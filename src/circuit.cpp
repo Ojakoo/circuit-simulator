@@ -16,7 +16,7 @@ void Circuit::ConstructMatrices() {
     int node_count = 0;
     int voltage_sources_count = 0;
 
-    int omega = 0.0;  // DC circuit
+    float omega = omega_;
 
     for ( auto const& i : nodes_ ) {
         if ( i.second->GetType() != GROUND ) {
@@ -58,14 +58,14 @@ void Circuit::ConstructMatrices() {
                     case CAPACITOR:
                         if (omega)
                             admittance = std::complex<float>(
-                                0, component->GetValue() * omega
+                                0, (component->GetValue() * omega)
                             );  // Y = 1 / Z = j*w*C
                         break;
                     case INDUCTOR:
                         if (omega)
                             admittance = std::complex<float>(
-                                0, 1 / (component->GetValue() * omega)
-                            );  // Y = 1 / Z = 1 / (j*w*L)
+                                0, (- 1 / (component->GetValue() * omega))
+                            );  // Y = 1 / Z = -j / (w*L)
                         break;
                     default:
                         break;
@@ -90,6 +90,7 @@ void Circuit::ConstructMatrices() {
                 Construct B and C submatrices and z vector.
                 */
                 switch ( type ) {
+                    case AC_VOLTAGE_SOURCE:
                     case DC_VOLTAGE_SOURCE:
                         if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
                             //if voltage source is not mapped map it for future reference
@@ -108,6 +109,7 @@ void Circuit::ConstructMatrices() {
                         }
                         z_(voltage_source_indexes_[name]) = component->GetValue();
                         break;
+                    case AC_CURRENT_SOURCE:
                     case DC_CURRENT_SOURCE:
                         if ( out->GetType() != GROUND ) {
                             z_(node_indexes_[out_name]) += component->GetValue();
@@ -164,9 +166,9 @@ const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
 
 void Circuit::AddComponent(std::shared_ptr<Component> component) {
     ComponentType type = component->GetType();
-    if (type == DC_VOLTAGE_SOURCE || type == DC_CURRENT_SOURCE) {
+    if ( (type == DC_VOLTAGE_SOURCE || type == AC_VOLTAGE_SOURCE) || (type == DC_CURRENT_SOURCE || type == AC_CURRENT_SOURCE)   ) {
         i_++;
-        if (type == DC_VOLTAGE_SOURCE) {
+        if (type == DC_VOLTAGE_SOURCE || type == AC_VOLTAGE_SOURCE ) {
             m_++;
         }
     }
