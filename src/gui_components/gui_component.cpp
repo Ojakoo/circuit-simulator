@@ -53,7 +53,7 @@ void GUIComponent::SetValue(float newval) {
     component_->SetValue(newval);
 }
 
-void GUIComponent::DrawInfo(sf::RenderWindow &window) const {
+void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     sf::Font font;
     if (font.loadFromFile("../fonts/arial.ttf"))
     {
@@ -73,16 +73,34 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) const {
         window.draw(name);
         window.draw(value);
     }
-}
-
-void GUIComponent::DrawTerminalRects(sf::RenderWindow &window) {
     if (component_->GetTerminalNode(INPUT)) {
+        auto rot = getRotation();
+        auto bounds = getGlobalBounds();
+        if (rot == 0)
+            input_rect_.setPosition(bounds.left, bounds.top + bounds.height/2);
+        else if (rot == 90)
+            input_rect_.setPosition(bounds.left + bounds.width/2, bounds.top);
+        else if (rot == 180)
+            input_rect_.setPosition(bounds.left + bounds.width, bounds.top + bounds.height/2);
+        else
+            input_rect_.setPosition(bounds.left + bounds.width/2, bounds.top + bounds.height);
         window.draw(input_rect_);
     }
     if (component_->GetTerminalNode(OUTPUT)) {
+        auto rot = getRotation();
+        auto bounds = getGlobalBounds();
+        if (rot == 0)
+            output_rect_.setPosition(bounds.left + bounds.width, bounds.top + bounds.height/2);
+        else if (rot == 90)
+            output_rect_.setPosition(bounds.left + bounds.width/2, bounds.top + bounds.height);
+        else if (rot == 180)
+            output_rect_.setPosition(bounds.left, bounds.top + bounds.height/2);
+        else
+            output_rect_.setPosition(bounds.left + bounds.width/2, bounds.top);
         window.draw(output_rect_);
     }
 }
+
 
 void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
     switch ( terminal ) {

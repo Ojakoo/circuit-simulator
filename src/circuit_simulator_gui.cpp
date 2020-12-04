@@ -836,6 +836,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw wires
     for (auto it : wires_) {
         draw(*it);
+        it->DrawInfo(*this);
     }
 
     // draw ground
