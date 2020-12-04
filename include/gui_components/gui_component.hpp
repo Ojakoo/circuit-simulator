@@ -35,9 +35,7 @@ class GUIComponent : public sf::Sprite {
 
         const std::shared_ptr<Component> GetComponent() const;
 
-        void DrawInfo(sf::RenderWindow &window) const;
-
-        void DrawTerminalRects(sf::RenderWindow &window);
+        void DrawInfo(sf::RenderWindow &window);
 
         void SetTerminalRects(TerminalType terminal, sf::Vector2f coords);
 

@@ -39,3 +39,16 @@ void GUIWire::ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType 
 std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GUIWire::GetComponents() {
     return components_;
 }
+
+void GUIWire::DrawInfo(sf::RenderWindow &window) {
+    if (node_ && getVertexCount() >= 2) {
+        sf::Font font;
+        if (font.loadFromFile("../fonts/arial.ttf"))
+        {
+            sf::Text name(node_->GetName(), font, 14);
+            name.setFillColor(sf::Color::Blue);
+            name.setPosition((*this)[0].position);
+            window.draw(name);
+        }
+    }
+}
