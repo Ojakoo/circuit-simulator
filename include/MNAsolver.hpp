@@ -21,13 +21,14 @@ class MNAsolver {
         const std::map<std::string, cd> GetNodeVoltages() const;
         const std::map<std::string, cd> GetVoltageSourceCurrents() const;
 
-        void setCurrents(const std::list<std::shared_ptr<Component>> components) const;
+        void setCurrents(const std::list<std::shared_ptr<Component>> components);
 
     private:
         MatrixXcf test = MatrixXcf::Zero(3,3);
         VectorXcf x_;
         std::map<std::string, cd> node_voltages_;
         std::map<std::string, cd> voltage_source_currents_;
+        std::map<std::string, cd> passive_component_currents_;
 };
 
 std::ostream &operator<<(std::ostream& out, const MNAsolver& solver);
