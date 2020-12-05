@@ -42,7 +42,7 @@ std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
 
 
 void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components){
-    int omega = 0.0;//dc circuit
+    // int omega = 0.0; //for ac circuit
     passive_component_currents_.clear();
 
     for ( auto const& component : components ){
