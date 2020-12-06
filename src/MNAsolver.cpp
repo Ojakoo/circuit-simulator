@@ -89,16 +89,18 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                         */
                         passive_component_currents_[ comp_name] = std::complex<float>(0,0);
                         break;
+                        /*
                     case INDUCTOR:
                     //if we apply ac sources
-                        /*if (omega){
+                        if (omega){
                             admittance = std::complex<float>(
                                 0, 1 / (component->GetValue() * omega)
                             );  // Y = 1 / Z = 1 / (j*w*L)
                             current = V_difference * admittance;
-                        }*/
+                        }
                         passive_component_currents_[ comp_name] = std::complex<float>(0,0);
                         break;
+                        */
                     default:
                         break;
                 }
