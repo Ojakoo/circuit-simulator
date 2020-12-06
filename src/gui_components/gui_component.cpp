@@ -128,8 +128,8 @@ void GUIComponent::ConnectWire(TerminalType terminal) {
 void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
     connected_wires_[terminal] -= 1;
     if (connected_wires_[terminal] <= 0) {
-        // disconnect and remove from circuit
-        circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
+        // disconnect
+        //circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
         ConnectNodeToTerminal(terminal, nullptr);
         connected_wires_[terminal] = 0;
     }

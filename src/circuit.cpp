@@ -1,3 +1,5 @@
+#include <set>
+#include <string>
 
 #include "circuit.hpp"
 
@@ -9,7 +11,29 @@ void Circuit::RemoveComponent(std::shared_ptr<Component> component) {
     components_.remove(component);
 }
 
+void Circuit::RemoveUnnecessaryNodes() {
+    std::set<std::string> used_nodes;
+    for ( auto comp : components_ ) {
+        if (comp->GetTerminalNode(INPUT)) {
+            used_nodes.insert(comp->GetTerminalNode(INPUT)->GetName());
+        }
+        if (comp->GetTerminalNode(OUTPUT)) {
+            used_nodes.insert(comp->GetTerminalNode(OUTPUT)->GetName());
+        }
+    }
+    auto itr = nodes_.begin();
+    while (itr != nodes_.end()) {
+        auto found = used_nodes.find((*itr).first);
+        if ( found == used_nodes.end() ) {
+            nodes_.erase(itr++);
+        } else {
+            ++itr;
+        }
+    }
+}
+
 void Circuit::ConstructMatrices() {
+    RemoveUnnecessaryNodes();
     //generate index map based on nodes
     node_indexes_.clear();
     voltage_source_indexes_.clear();

@@ -762,6 +762,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         if (ImGui::BeginMenu("Simulate"))
         {
             if (ImGui::MenuItem("Steady state analysis")) {
+                circuit_.RemoveUnnecessaryNodes();
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
                     std::cout << *(it.second) << std::endl;
