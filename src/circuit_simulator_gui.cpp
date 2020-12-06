@@ -171,6 +171,11 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
                 sources_++;
                 components_.push_back(v);
                 circuit_.AddComponent(v->GetComponent());
+            } else if ( type == "J" ) {
+                auto j = std::make_shared<GUICurrentSource>(name, value, in, out);
+                sources_++;
+                components_.push_back(j);
+                circuit_.AddComponent(j->GetComponent());
             } else {
                 throw std::runtime_error("Invalid component type found in netlist.");
             }
@@ -510,6 +515,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             case VOLTAGE_SOURCE:
                                 sources_++;
                                 break;
+                            case CURRENT_SOURCE:
+                                sources_++;
+                                break;
                             default:
                                 break;
                         }
@@ -638,6 +646,12 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                         );
                     }
+                } else if (event.key.code == sf::Keyboard::J && event.key.control) {
+                    if (!addingComponent_ && action_ != ADDING_COMPONENT) {
+                        AddingComponent(
+                            std::make_shared<GUICurrentSource>("J" + std::to_string(sources_))
+                        );
+                    }
                 } else if (event.key.code == sf::Keyboard::E && event.key.control) {
                     action_ = EDIT_VALUE;
                 } else if (event.key.code == sf::Keyboard::G && event.key.control) {
@@ -700,7 +714,11 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                         std::make_shared<GUIVoltageSource>("V" + std::to_string(sources_))
                     );
                 }
-                if (ImGui::MenuItem("Current source", "CTRL+J", false, false)) {}
+                if (ImGui::MenuItem("Current source", "CTRL+J")) {
+                    AddingComponent(
+                        std::make_shared<GUICurrentSource>("J" + std::to_string(sources_))
+                    );
+                }
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Wire", "CTRL+W")) {

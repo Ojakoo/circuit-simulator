@@ -20,6 +20,7 @@
 #include "gui_components/gui_voltage_source.hpp"
 #include "gui_components/gui_wire.hpp"
 #include "gui_components/gui_ground.hpp"
+#include "gui_components/gui_current_source.hpp"
 
 #include "circuit.hpp"
 
