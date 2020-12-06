@@ -447,6 +447,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     if ( action_ == DELETING_ELEMENT  && !clicked_component ) {
                         auto it = WireClick(mouse);
                         if (it != wires_.end()) {
+                            for (auto wire : wires_) {
+                                wire->DisconnectWire(*it);
+                            }
                             wires_.erase(it);
                         } else {
                             for (auto it = grounds_.begin(); it != grounds_.end(); it++) {
@@ -493,6 +496,17 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 addingWire_->ConnectComponent(clicked_component, pair.first);
                             }
                             //clicked_component->SetTerminalRects(pair.first, pair.second);
+                        } else {
+                            // check if we clicked on wire
+                            auto it = WireClick(mouse);
+                            if (it != wires_.end()) {
+                                addingWire_->ConnectWire(*it);
+                                (*it)->ConnectWire(addingWire_);
+                                if (addingWire_->GetNode()) {
+                                    // the wire being added has a node.
+                                    (*it)->SetNode(addingWire_->GetNode());
+                                }
+                            }
                         }
                         if (!skip) {
                             addingWire_->resize(count + 1);

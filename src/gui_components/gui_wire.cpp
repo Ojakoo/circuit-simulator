@@ -25,6 +25,11 @@ void GUIWire::SetNodeType(NodeType type) {
 }
 
 void GUIWire::SetNode(std::shared_ptr<Node> node) {
+    for ( auto pair : components_) {
+        for (auto comp : pair.second) {
+            comp->ConnectNodeToTerminal(pair.first, node);
+        }
+    }
     node_ = node;
 }
 
@@ -51,4 +56,12 @@ void GUIWire::DrawInfo(sf::RenderWindow &window) {
             window.draw(name);
         }
     }
+}
+
+void GUIWire::ConnectWire(std::shared_ptr<GUIWire> wire) {
+    connected_wires_.push_back(wire);
+}
+
+void GUIWire::DisconnectWire(std::shared_ptr<GUIWire> wire) {
+    connected_wires_.remove(wire);
 }
