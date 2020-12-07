@@ -22,6 +22,9 @@ class MNAsolver {
         const std::map<std::string, cd> GetVoltageSourceCurrents() const;
 
         void setCurrents(const std::list<std::shared_ptr<Component>> components);
+        
+        std::ostream &resultListed(std::ostream &out);
+
 
     private:
         MatrixXcf test = MatrixXcf::Zero(3,3);

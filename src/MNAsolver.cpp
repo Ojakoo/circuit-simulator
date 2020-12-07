@@ -61,7 +61,6 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
 
         std::complex<float> V_difference = in_value - out_value;
 
-
         std::complex<float> admittance;
         std::complex<float> current;
 
@@ -122,4 +121,35 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                 break;
         }
     }
+}
+
+std::ostream & MNAsolver::resultListed(std::ostream &out){
+    out << " Result: " << std::endl;
+
+    for(auto const& pair: node_voltages_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " V"
+        << std::endl;
+    }
+
+    for(auto const& pair: voltage_source_currents_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " A"
+        << std::endl;
+    }
+    
+    for(auto const& pair: passive_component_currents_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " A"
+        << std::endl;
+    }
+
+    out << std::endl;
+    return out;
 }
