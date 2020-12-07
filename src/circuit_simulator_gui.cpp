@@ -762,13 +762,20 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         if (ImGui::BeginMenu("Simulate"))
         {
             if (ImGui::MenuItem("Steady state analysis")) {
+                /*
                 circuit_.RemoveUnnecessaryNodes();
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
                     std::cout << *(it.second) << std::endl;
                 }
+                */
+                circuit_.ConstructMatrices();
+                auto A = circuit_.GetAMatrix();
+                auto z = circuit_.GetZMatrix();
+                //std::cout << A << std::endl;
+                //std::cout << z << std::endl;
+                std::cout << A.inverse() * z << std::endl;
             }
-            if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
             ImGui::EndMenu();
         }
         ImGui::SameLine(ImGui::GetWindowWidth() - 150);
