@@ -420,7 +420,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             if ( !(clicked_component->GetTerminalNode(pair.first)) ) {
-                                auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                auto node = circuit_.AddNode();
                                 nodes_++;
                                 clicked_component->ConnectNodeToTerminal(pair.first, node);
                             }
@@ -433,7 +433,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto it = WireClick(mouse);
                             if (it != wires_.end()) {
                                 if ( !(*it)->GetNode() ) {
-                                    auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    auto node = circuit_.AddNode();
                                     nodes_++;
                                     (*it)->SetNode(node);
                                 }
@@ -485,7 +485,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     node = addingWire_->GetNode();
                                 } else {
                                     // the wire doesn't have a node
-                                    node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    node = circuit_.AddNode();
                                     nodes_++;
                                     addingWire_->SetNode(node);
                                 }

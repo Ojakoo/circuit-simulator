@@ -20,6 +20,7 @@ public:
     const std::map<std::string, int> GetNodeIndexes() const;
     const std::map<std::string, int> GetVoltageSourceIndexes() const;
     const std::shared_ptr<Node> AddNode(const std::string& node_name);
+    const std::shared_ptr<Node> AddNode();
     void RemoveNode(const std::string& node_name);
     void RemoveUnnecessaryNodes();
     void AddComponent(std::shared_ptr<Component> component);

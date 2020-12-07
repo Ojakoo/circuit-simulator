@@ -213,6 +213,27 @@ const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     return nodes_[node_name];
 }
 
+const std::shared_ptr<Node> Circuit::AddNode() {
+    // completely new node
+    std::set<std::string> node_names;
+    for ( auto pair : nodes_ ) {
+        node_names.insert(pair.first);
+    }
+    int j = 0;
+    while ( j < 99999 ) {
+        std::string s = "N" + std::to_string(j);
+        auto it = node_names.find(s);
+        if ( it == node_names.end() ) {
+            // not in nodes
+            auto n = std::make_shared<Node>(s);
+            nodes_[s] = n;
+            return n;
+        }
+        j++;
+    }
+    return nullptr;
+}
+
 void Circuit::RemoveNode(const std::string& node_name) {
     nodes_.erase(node_name);
 }
