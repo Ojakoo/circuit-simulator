@@ -1,4 +1,3 @@
-#include <map>
 
 #include "MNAsolver.hpp"
 
@@ -39,4 +38,118 @@ std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
         out << "\n" << it.first << " " << it.second;
     }
     return out.flush();
+}
+
+
+void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components){
+    // int omega = 0.0; //for ac circuit
+    passive_component_currents_.clear();
+
+    for ( auto const& component : components ){
+        std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
+        std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
+
+        ComponentType type = component->GetType();
+        ComponentClass cls = component->GetClass();
+        std::string comp_name = component->GetName();
+
+        std::string out_name = out->GetName();
+        std::string in_name = in->GetName();
+
+        std::complex<float> out_value = node_voltages_[out_name];
+        std::complex<float> in_value = node_voltages_[in_name];
+
+        std::complex<float> V_difference = in_value - out_value;
+
+        std::complex<float> admittance;
+        std::complex<float> current;
+
+        switch ( cls ) {
+            case PASSIVE:
+                /*
+                Calculating currents only for passive components
+                */
+                switch ( type ) {
+                    case RESISTOR:
+                        admittance = std::complex<float>(
+                            1 / component->GetValue(), 0
+                        );  // Y = 1 / Z = 1 / R
+                        current = V_difference * admittance;
+                        passive_component_currents_[ comp_name] = current;
+                        break;
+                    case CAPACITOR:
+                    //if we apply ac sources
+                     /*   if (omega){
+                            admittance = std::complex<float>(
+                                0, component->GetValue() * omega
+                            );  // Y = 1 / Z = j*w*C
+                            current = V_difference * admittance;
+                        }
+                        */
+                        passive_component_currents_[ comp_name] = std::complex<float>(0,0);
+                        break;
+                        /*
+                    case INDUCTOR:
+                    //if we apply ac sources
+                        if (omega){
+                            admittance = std::complex<float>(
+                                0, 1 / (component->GetValue() * omega)
+                            );  // Y = 1 / Z = 1 / (j*w*L)
+                            current = V_difference * admittance;
+                        }
+                        passive_component_currents_[ comp_name] = std::complex<float>(0,0);
+                        break;
+                        */
+                    default:
+                        break;
+                }
+                 
+                
+                
+                break;
+            case ACTIVE: //do nothing
+            /*
+                switch ( type ) {
+                    case DC_VOLTAGE_SOURCE:
+                        break;
+                    case DC_CURRENT_SOURCE:
+                        break;
+                    default:
+                        break;
+                } 
+            */
+                break;
+        }
+    }
+}
+
+std::ostream & MNAsolver::resultListed(std::ostream &out){
+    out << " Result: " << std::endl;
+
+    for(auto const& pair: node_voltages_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " V"
+        << std::endl;
+    }
+
+    for(auto const& pair: voltage_source_currents_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " A"
+        << std::endl;
+    }
+    
+    for(auto const& pair: passive_component_currents_){
+        out << pair.first 
+        << ": "
+        << pair.second
+        << " A"
+        << std::endl;
+    }
+
+    out << std::endl;
+    return out;
 }

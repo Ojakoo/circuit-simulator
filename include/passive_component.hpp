@@ -21,4 +21,5 @@ class PassiveComponent : public Component {
 
         ComponentClass GetClass() const;
 
+
 };

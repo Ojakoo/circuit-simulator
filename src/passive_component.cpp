@@ -10,3 +10,5 @@ PassiveComponent::PassiveComponent(const std::string &name,
 ComponentClass PassiveComponent::GetClass() const {
     return PASSIVE;
 };
+
+
