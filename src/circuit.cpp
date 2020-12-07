@@ -13,6 +13,8 @@ void Circuit::ConstructMatrices() {
     //generate index map based on nodes
     node_indexes_.clear();
     voltage_source_indexes_.clear();
+    inductor_indexes_.clear();
+    int l = 0;  // inductor count
     int node_count = 0;
     int voltage_sources_count = 0;
 
@@ -25,8 +27,16 @@ void Circuit::ConstructMatrices() {
         }
     }
 
-    A_ = MatrixXcf::Zero(n_ + m_, n_ + m_);  // initialize A matrix
-    z_ = VectorXf::Zero(m_ + n_);  // initialize z vector
+    // count inductors
+    for ( auto it : components_ ) {
+        if ( it->GetType() == INDUCTOR ) {
+            inductor_indexes_[it->GetName()] = l;
+            l += 1;
+        }
+    }
+
+    A_ = MatrixXcf::Zero(n_ + m_ + l, n_ + m_ + l);  // initialize A matrix
+    z_ = VectorXf::Zero(m_ + n_ + l);  // initialize z vector
 
     for ( auto const& component : components_ ) {
 
@@ -84,6 +94,20 @@ void Circuit::ConstructMatrices() {
                     // input terminal is connected to some node
                     A_( node_indexes_[in_name], node_indexes_[in_name] ) += admittance;
                 }
+
+                if ( type == INDUCTOR ) {
+                    int idx = inductor_indexes_[name];
+                    
+                    if ( out->GetType() != GROUND ) {
+                        A_( node_indexes_[out_name], m_ + n_ + idx ) = 1;
+                        A_( m_ + n_ + idx, node_indexes_[out_name]) = 1;
+                    }
+                    if ( in->GetType() != GROUND ) {
+                        A_( node_indexes_[in_name], m_ + n_ + idx ) = -1;
+                        A_( m_ + n_ + idx, node_indexes_[in_name]) = -1;
+                    }
+                }
+
                 break;
             case ACTIVE:
                 /*
