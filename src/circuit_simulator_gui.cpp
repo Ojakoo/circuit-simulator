@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <set>
+#include <map>
 
 #include "ImGuiFileBrowser.h"
 
@@ -9,10 +10,16 @@
 
 
 const float distance(sf::Vector2f &a, sf::Vector2f &b) {
+    /*
+    Calculates distance between two points.
+    */
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
 const float dot(const sf::Vector2f &a, const sf::Vector2f &b) {
+    /*
+    Calculates dot product between two vectors.
+    */
     return a.x * b.x + a.y * b.y;
 }
 
@@ -128,6 +135,8 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
 
     std::set<std::string> c = {"R", "L", "C", "V"};
 
+    std::map<std::string, std::shared_ptr<GUIComponent>> comp_map;
+
     while( !ifstr.eof() ) {
         std::string line;
         std::getline(ifstr, line);
@@ -180,18 +189,33 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
                 throw std::runtime_error("Invalid component type found in netlist.");
             }
             auto comp = components_.back();
+            comp_map[name] = comp;
             comp->setRotation(rot);
             comp->setPosition(x, y);
         } else if (type == "W") {
             // Wire
             std::string node;
             int verticies;
-            iss >> node >> verticies;
+            int comps;
+            iss >> node >> verticies >> comps;
             auto w = std::make_shared<GUIWire>(circuit_);
             auto n = circuit_.AddNode(node);
             wires_.push_back(w);
             w->SetNode(n);
             w->resize(verticies);
+            for (int j = 0; j < comps; j++) {
+                std::string line;
+                std::getline(ifstr, line);
+                std::stringstream iss(line);
+                std::string term, nam;
+                iss >> term >> nam;
+                TerminalType terminal = term == "IN" ? INPUT : OUTPUT;
+                auto iter = comp_map.find(nam);
+                if (iter != comp_map.end()) {
+                    // found comp!
+                    w->ConnectComponent((*iter).second, terminal);
+                }
+            }
             for (int i = 0; i < verticies; i++) {
                 std::string line;
                 std::getline(ifstr, line);
@@ -249,7 +273,21 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
     }
     for ( auto wire : wires_ ) {
         auto node = wire->GetNode();
-        save_file << "W " << (node ? node->GetName() : "-") << " " << wire->getVertexCount() << std::endl;
+        save_file << "W " << (node ? node->GetName() : "-") << " " << wire->getVertexCount() << " ";
+        save_file << wire->GetComponents()[INPUT].size() + wire->GetComponents()[OUTPUT].size() << std::endl;
+        for ( auto pair : wire->GetComponents() ) {
+            for ( auto comp : pair.second ) {
+                switch (pair.first) {
+                    case INPUT:
+                        save_file << "IN ";
+                        break;
+                    case OUTPUT:
+                        save_file << "OUT ";
+                        break;
+                }
+                save_file << comp->GetName() << std::endl;;
+            }
+        }
         for (int i = 0; i < wire->getVertexCount(); i++) {
             save_file << (*wire)[i].position.x << " " << (*wire)[i].position.y << std::endl;
         } 
@@ -420,7 +458,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             if ( !(clicked_component->GetTerminalNode(pair.first)) ) {
-                                auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                auto node = circuit_.AddNode();
                                 nodes_++;
                                 clicked_component->ConnectNodeToTerminal(pair.first, node);
                             }
@@ -433,7 +471,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto it = WireClick(mouse);
                             if (it != wires_.end()) {
                                 if ( !(*it)->GetNode() ) {
-                                    auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    auto node = circuit_.AddNode();
                                     nodes_++;
                                     (*it)->SetNode(node);
                                 }
@@ -485,7 +523,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     node = addingWire_->GetNode();
                                 } else {
                                     // the wire doesn't have a node
-                                    node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    node = circuit_.AddNode();
                                     nodes_++;
                                     addingWire_->SetNode(node);
                                 }
@@ -762,13 +800,20 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         if (ImGui::BeginMenu("Simulate"))
         {
             if (ImGui::MenuItem("Steady state analysis")) {
+                /*
                 circuit_.RemoveUnnecessaryNodes();
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
                     std::cout << *(it.second) << std::endl;
                 }
+                */
+                circuit_.ConstructMatrices();
+                auto A = circuit_.GetAMatrix();
+                auto z = circuit_.GetZMatrix();
+                //std::cout << A << std::endl;
+                //std::cout << z << std::endl;
+                std::cout << A.inverse() * z << std::endl;
             }
-            if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
             ImGui::EndMenu();
         }
         ImGui::SameLine(ImGui::GetWindowWidth() - 150);

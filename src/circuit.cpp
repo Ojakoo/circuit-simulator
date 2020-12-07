@@ -8,6 +8,8 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
 }
 
 void Circuit::RemoveComponent(std::shared_ptr<Component> component) {
+    if ( component -> GetType() == VOLTAGE_SOURCE )
+        m_ -= 1;
     components_.remove(component);
 }
 
@@ -26,6 +28,7 @@ void Circuit::RemoveUnnecessaryNodes() {
         auto found = used_nodes.find((*itr).first);
         if ( found == used_nodes.end() ) {
             nodes_.erase(itr++);
+            n_ -= 1;
         } else {
             ++itr;
         }
@@ -39,28 +42,32 @@ void Circuit::ConstructMatrices() {
     voltage_source_indexes_.clear();
     inductor_indexes_.clear();
     int l = 0;  // inductor count
-    int node_count = 0;
+    int m = 0; // voltage source count
+    int n = 0; // node count
     int voltage_sources_count = 0;
 
     int omega = 0.0;  // DC circuit
 
     for ( auto const& i : nodes_ ) {
         if ( i.second->GetType() != GROUND ) {
-            node_indexes_[ i.first ] = node_count;
-            node_count++;
+            node_indexes_[ i.first ] = n;
+            n++;
         }
     }
 
-    // count inductors
+    // count inductors and voltage sources
     for ( auto it : components_ ) {
         if ( it->GetType() == INDUCTOR ) {
             inductor_indexes_[it->GetName()] = l;
             l += 1;
         }
+        if ( it->GetType() == VOLTAGE_SOURCE ) {
+            m += 1;
+        }
     }
 
-    A_ = MatrixXcf::Zero(n_ + m_ + l, n_ + m_ + l);  // initialize A matrix
-    z_ = VectorXf::Zero(m_ + n_ + l);  // initialize z vector
+    A_ = MatrixXcf::Zero(n + m + l, n + m + l);  // initialize A matrix
+    z_ = VectorXf::Zero(m + n + l);  // initialize z vector
 
     for ( auto const& component : components_ ) {
 
@@ -123,12 +130,12 @@ void Circuit::ConstructMatrices() {
                     int idx = inductor_indexes_[name];
                     
                     if ( out->GetType() != GROUND ) {
-                        A_( node_indexes_[out_name], m_ + n_ + idx ) = 1;
-                        A_( m_ + n_ + idx, node_indexes_[out_name]) = 1;
+                        A_( node_indexes_[out_name], m + n + idx ) = 1;
+                        A_( m + n + idx, node_indexes_[out_name]) = 1;
                     }
                     if ( in->GetType() != GROUND ) {
-                        A_( node_indexes_[in_name], m_ + n_ + idx ) = -1;
-                        A_( m_ + n_ + idx, node_indexes_[in_name]) = -1;
+                        A_( node_indexes_[in_name], m + n + idx ) = -1;
+                        A_( m + n + idx, node_indexes_[in_name]) = -1;
                     }
                 }
 
@@ -141,7 +148,7 @@ void Circuit::ConstructMatrices() {
                     case VOLTAGE_SOURCE:
                         if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
                             //if voltage source is not mapped map it for future reference
-                            voltage_source_indexes_[name] = node_count + voltage_sources_count;
+                            voltage_source_indexes_[name] = n + voltage_sources_count;
                             voltage_sources_count++;
                         }
                         if ( out->GetType() != GROUND ) {
@@ -189,10 +196,6 @@ const int Circuit::GetSourceCount() const {
     return i_;
 }
 
-const int Circuit::GetVoltageSourceCount() const {
-    return m_;
-}
-
 const std::map<std::string, int> Circuit::GetNodeIndexes() const {
     return node_indexes_;
 }
@@ -208,6 +211,27 @@ const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
         nodes_[node_name] = std::make_shared<Node>(node_name, node_name == "0" ? GROUND : NORMAL);
     }
     return nodes_[node_name];
+}
+
+const std::shared_ptr<Node> Circuit::AddNode() {
+    // completely new node
+    std::set<std::string> node_names;
+    for ( auto pair : nodes_ ) {
+        node_names.insert(pair.first);
+    }
+    int j = 0;
+    while ( j < 99999 ) {
+        std::string s = "N" + std::to_string(j);
+        auto it = node_names.find(s);
+        if ( it == node_names.end() ) {
+            // not in nodes
+            auto n = std::make_shared<Node>(s);
+            nodes_[s] = n;
+            return n;
+        }
+        j++;
+    }
+    return nullptr;
 }
 
 void Circuit::RemoveNode(const std::string& node_name) {
