@@ -43,7 +43,7 @@ class GUIComponent : public sf::Sprite {
 
         void ConnectWire(TerminalType terminal);
 
-        void RemoveWire(TerminalType terminal, Circuit &circuit);
+        void RemoveWire(TerminalType terminal);
 
     private:
         sf::Texture tx_;  // holds pointer for texture
