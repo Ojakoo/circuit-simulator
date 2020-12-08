@@ -32,8 +32,6 @@ public:
     void RemoveUnnecessaryNodes();
     void AddComponent(std::shared_ptr<Component> component);
     void ConstructMatrices();
-    void ConstructMatrices2();
-    void StampLogic( float omega, int inductor_count );
     void RemoveComponent(std::shared_ptr<Component> component);
     std::map<std::string, std::shared_ptr<Node>> GetNodes();
 
