@@ -101,18 +101,6 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     }
 }
 
-
-void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
-    switch ( terminal ) {
-        case INPUT:
-            input_rect_.setPosition(coords);
-            break;
-        case OUTPUT:
-            output_rect_.setPosition(coords);
-            break;
-    }
-}
-
 void GUIComponent::ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node) {
     component_->ConnectNodeToTerminal(node, terminal);
 }
@@ -129,12 +117,7 @@ void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
     connected_wires_[terminal] -= 1;
     if (connected_wires_[terminal] <= 0) {
         // disconnect
-        //circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
         ConnectNodeToTerminal(terminal, nullptr);
         connected_wires_[terminal] = 0;
     }
-}
-
-const int GUIComponent::GetWireCount(TerminalType terminal) {
-    return connected_wires_[terminal];
 }

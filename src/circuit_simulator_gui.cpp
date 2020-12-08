@@ -549,7 +549,6 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 clicked_component->ConnectWire(pair.first);
                                 addingWire_->ConnectComponent(clicked_component, pair.first);
                             }
-                            //clicked_component->SetTerminalRects(pair.first, pair.second);
                         } else {
                             // check if we clicked on wire
                             auto it = WireClick(mouse);
