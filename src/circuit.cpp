@@ -35,15 +35,18 @@ void Circuit::RemoveUnnecessaryNodes() {
 void Circuit::ConstructMatrices() {
     RemoveUnnecessaryNodes();
     //generate index map based on nodes
+    // works only on circuits with ac or dc sources only
     node_indexes_.clear();
     voltage_source_indexes_.clear();
     inductor_indexes_.clear();
+
+    int inductor_sc_count = 0;
     int l = 0;  // inductor count
     int m = 0; // voltage source count
     int n = 0; // node count
     int voltage_sources_count = 0;
 
-    int omega = 0.0;  // DC circuit
+    float omega = omega_;
 
     for ( auto const& i : nodes_ ) {
         if ( i.second->GetType() != GROUND ) {
@@ -54,7 +57,7 @@ void Circuit::ConstructMatrices() {
 
     // count inductors and voltage sources
     for ( auto it : components_ ) {
-        if ( it->GetType() == INDUCTOR ) {
+        if ( it->GetType() == INDUCTOR && omega == 0) {
             inductor_indexes_[it->GetName()] = l;
             l += 1;
         }
@@ -94,21 +97,22 @@ void Circuit::ConstructMatrices() {
                         );  // Y = 1 / Z = 1 / R
                         break;
                     case CAPACITOR:
-                        if (omega)
+                        if (omega != 0) {
                             admittance = std::complex<float>(
-                                0, component->GetValue() * omega
+                                0, (component->GetValue() * omega)
                             );  // Y = 1 / Z = j*w*C
+                        }
                         break;
                     case INDUCTOR:
-                        if (omega)
-                            admittance = std::complex<float>(
-                                0, 1 / (component->GetValue() * omega)
-                            );  // Y = 1 / Z = 1 / (j*w*L)
+                        if (omega != 0) {
+                           admittance = std::complex<float>(
+                                0, (- 1 / (component->GetValue() * omega))
+                            );  // Y = 1 / Z = -j / (w*L) 
+                        }
                         break;
                     default:
                         break;
                 }
-
                 if ( in->GetType() != GROUND && out->GetType() != GROUND ) {
                     // component is between two nodes
                     A_( node_indexes_[out_name], node_indexes_[in_name] ) += -admittance;
@@ -123,7 +127,7 @@ void Circuit::ConstructMatrices() {
                     A_( node_indexes_[in_name], node_indexes_[in_name] ) += admittance;
                 }
 
-                if ( type == INDUCTOR ) {
+                if ( type == INDUCTOR && omega == 0) {
                     int idx = inductor_indexes_[name];
                     
                     if ( out->GetType() != GROUND ) {
@@ -158,7 +162,7 @@ void Circuit::ConstructMatrices() {
                             A_(voltage_source_indexes_[name], node_indexes_[in_name]) = -1;  // append value to B submatrix
                             A_(node_indexes_[in_name], voltage_source_indexes_[name]) = -1;  // append value to C submatrix
                         }
-                        z_(voltage_source_indexes_[name]) = component->GetValue();
+                        z_(voltage_source_indexes_[name]) = component->GetValue();    
                         break;
                     case CURRENT_SOURCE:
                         if ( out->GetType() != GROUND ) {
@@ -166,7 +170,7 @@ void Circuit::ConstructMatrices() {
                         }
                         if ( in->GetType() != GROUND ) {
                             z_(node_indexes_[in_name]) += -component->GetValue();
-                        }
+                        }    
                         break;
                     default:
                         break;
