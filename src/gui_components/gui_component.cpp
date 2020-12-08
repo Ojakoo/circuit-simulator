@@ -58,9 +58,27 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     if (font.loadFromFile("../fonts/arial.ttf"))
     {
         sf::Text name(GetName(), font, 14);
-        sf::Text value(std::to_string(GetValue()), font, 14);
+        std::string unit;
+        switch (GetType()) {
+            case RESISTOR:
+                unit = " OHM";
+                break;
+            case CAPACITOR:
+                unit = " F";
+                break;
+            case INDUCTOR:
+                unit = " H";
+                break;
+            case VOLTAGE_SOURCE:
+                unit = " V";
+                break;
+            case CURRENT_SOURCE:
+                unit = " A";
+                break;
+        }
+        sf::Text value(std::to_string(GetValue()) + unit, font, 14);
         name.setFillColor(sf::Color::Black);
-        value.setFillColor(sf::Color::Black);
+        value.setFillColor(sf::Color::Yellow);
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
         if ( rot == 90.f || rot == 270.f) {
@@ -101,18 +119,6 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     }
 }
 
-
-void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
-    switch ( terminal ) {
-        case INPUT:
-            input_rect_.setPosition(coords);
-            break;
-        case OUTPUT:
-            output_rect_.setPosition(coords);
-            break;
-    }
-}
-
 void GUIComponent::ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node) {
     component_->ConnectNodeToTerminal(node, terminal);
 }
@@ -129,12 +135,7 @@ void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
     connected_wires_[terminal] -= 1;
     if (connected_wires_[terminal] <= 0) {
         // disconnect
-        //circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
         ConnectNodeToTerminal(terminal, nullptr);
         connected_wires_[terminal] = 0;
     }
-}
-
-const int GUIComponent::GetWireCount(TerminalType terminal) {
-    return connected_wires_[terminal];
 }

@@ -8,8 +8,6 @@ const std::list<std::shared_ptr<Component>>& Circuit::GetComponents() const {
 }
 
 void Circuit::RemoveComponent(std::shared_ptr<Component> component) {
-    if ( component -> GetType() == VOLTAGE_SOURCE )
-        m_ -= 1;
     components_.remove(component);
 }
 
@@ -28,7 +26,6 @@ void Circuit::RemoveUnnecessaryNodes() {
         auto found = used_nodes.find((*itr).first);
         if ( found == used_nodes.end() ) {
             nodes_.erase(itr++);
-            n_ -= 1;
         } else {
             ++itr;
         }
@@ -187,15 +184,6 @@ const VectorXf Circuit::GetZMatrix() const {
     return z_;
 }
 
-const int Circuit::GetNodeCount() const {
-    // return number of real nodes in circuit (no ground node)
-    return n_;
-}
-
-const int Circuit::GetSourceCount() const {
-    return i_;
-}
-
 const std::map<std::string, int> Circuit::GetNodeIndexes() const {
     return node_indexes_;
 }
@@ -207,7 +195,6 @@ const std::map<std::string, int> Circuit::GetVoltageSourceIndexes() const {
 const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     auto it = nodes_.find(node_name);
     if (it == nodes_.end()) {
-        if (node_name != "0") n_++;
         nodes_[node_name] = std::make_shared<Node>(node_name, node_name == "0" ? GROUND : NORMAL);
     }
     return nodes_[node_name];
@@ -239,14 +226,6 @@ void Circuit::RemoveNode(const std::string& node_name) {
 }
 
 void Circuit::AddComponent(std::shared_ptr<Component> component) {
-    ComponentType type = component->GetType();
-    if (type == VOLTAGE_SOURCE || type == CURRENT_SOURCE) {
-        i_++;
-        if (type == VOLTAGE_SOURCE) {
-            m_++;
-        }
-    }
-    
     components_.push_back(component);
 }
 
@@ -255,4 +234,8 @@ std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {
         out << "\n" << *it;
     }
     return out.flush();
+}
+
+std::map<std::string, std::shared_ptr<Node>> Circuit::GetNodes() {
+    return nodes_;
 }

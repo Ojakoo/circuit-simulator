@@ -3,7 +3,7 @@
 int main ( void ) {
 
     CircuitSimulatorGUI window(640, 480, "Circuit Simulator");
-    window.main_loop();
+    window.MainLoop();
     ImGui::SFML::Shutdown();
     
     return 0;
