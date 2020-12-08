@@ -1,6 +1,6 @@
 #include <string>
 #include <complex>
-#include <iostream>
+#include <iostream> 
 #include <map>
 
 #include "doctest.h"
@@ -10,6 +10,7 @@
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
+#include "ac_voltage_source.hpp"
 #include "dc_voltage_source.hpp"
 #include "dc_current_source.hpp"
 #include "node.hpp"
@@ -115,6 +116,97 @@ SCENARIO("MNA solver calculates correctly") {
 
             THEN("solved and reference is same len") {
                 CHECK(voltage_source_currents_ref.size() == solver.GetVoltageSourceCurrents().size());
+            }
+        }
+    }
+}
+
+SCENARIO("Producing matrices from circuit with reactive elements") {
+    GIVEN("") {
+
+        Circuit c = Circuit();
+
+        std::shared_ptr<Node> n1 = c.AddNode("N001");
+        std::shared_ptr<Node> n2 = c.AddNode("N002");
+        std::shared_ptr<Node> n3 = c.AddNode("N003");
+        std::shared_ptr<Node> g = c.AddNode("0");
+
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 6, g, n2);
+        std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 0.002, n1, g);
+        std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 0.00025, n2, n3);
+        std::shared_ptr<Capacitor> c2 = std::make_shared<Capacitor>("C1", 0.0003333, n1, n2);
+
+        std::shared_ptr<ACVoltageSource> s1 = std::make_shared<ACVoltageSource>("S1", 4, g, n3);
+        c.SetOmega( 2000 );
+
+        c.AddComponent(r1);
+        c.AddComponent(l1);
+        c.AddComponent(c1);
+        c.AddComponent(c2);
+        c.AddComponent(s1);
+
+        c.ConstructMatrices();
+
+        MatrixXcf A = c.GetAMatrix();
+        VectorXf z = c.GetZMatrix();
+        std::map<std::string, int> node_indexes = c.GetNodeIndexes();
+        std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+
+        WHEN("") {
+            MNAsolver solver = MNAsolver();
+
+            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+
+            std::cout << solver << std::endl;
+        }
+    }
+}
+
+SCENARIO("MNA solver calculates correctly") {
+    GIVEN("Circuit to construct matrix from") {
+
+        Circuit c = Circuit();
+        
+        std::shared_ptr<Node> n1 = c.AddNode("N001");
+        std::shared_ptr<Node> n2 = c.AddNode("N002");
+        std::shared_ptr<Node> n3 = c.AddNode("N003");
+        std::shared_ptr<Node> g = c.AddNode("0");
+
+        std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 4, g, n1);
+
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n1, n2);
+        std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n2, n3);
+        std::shared_ptr<Resistor> r3 = std::make_shared<Resistor>("R3", 0.5, n3, g);
+        std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 5, n2, n3);
+
+        c.AddComponent(r1);
+        c.AddComponent(r2);
+        c.AddComponent(r3);
+        c.AddComponent(s1);
+        c.AddComponent(l1);
+
+        c.ConstructMatrices();
+
+        MatrixXcf A = c.GetAMatrix();
+        VectorXf z = c.GetZMatrix();
+        std::map<std::string, int> node_indexes = c.GetNodeIndexes();
+        std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+
+        std::cout << "A:";
+        std::cout << A << std::endl;
+
+        Eigen::VectorXcf Refx = MatrixXf::Zero(5, 1);
+        Refx << cd(4,0), cd(2,0), cd(2,0), cd(-4,0), cd(4,0);
+        
+        WHEN("") {
+            MNAsolver solver = MNAsolver();
+
+            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+
+            std::cout << solver << std::endl;
+
+            THEN("") {
+                CHECK(solver.GetxVector().isApprox(Refx));
             }
         }
     }

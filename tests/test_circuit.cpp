@@ -178,7 +178,7 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
         std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 0.001, n2, n3);
         std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 0.005, n3, g);
 
-        std::shared_ptr<ACVoltageSource> s1 = std::make_shared<ACVoltageSource>("S1", 4, 50, g, n1);
+        std::shared_ptr<ACVoltageSource> s1 = std::make_shared<ACVoltageSource>("S1", 4, g, n1);
         c.SetOmega( 314 );
 
         c.AddComponent(r1);
@@ -231,28 +231,34 @@ SCENARIO("Producing matricies from circuit that is read from file") {
 
             Circuit c = LoadNetList(fname);
 
+            std::cout << "here" << std::endl;
+            std::cout << c << std::endl;
+
             c.ConstructMatrices();
 
             MatrixXcf A = c.GetAMatrix();
             VectorXf z = c.GetZMatrix();
+
+            std::cout << "here" << std::endl;
     
             THEN("There is 4 components in circuit") {
                 CHECK(c.GetComponents().size() == 4);
             }
-
+            
             THEN("Matricies are the right size") {
-                CHECK(A.rows() == 3);
-                CHECK(A.cols() == 3);
-                CHECK(z.rows() == 3);
+                CHECK(A.rows() == 4);
+                CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
                 CHECK(z.cols() == 1);
             }
-
+            std::cout << "end" << std::endl;
             THEN("Matricies are are built correctly") {
-                Matrix3cf m;
-                m << cd(0.1, 0), cd(-0.1, 0), cd(1.0, 0),
-                    cd(-0.1, 0), cd(0.1, 0), cd(0.0, 0),
-                    cd(1.0, 0), cd(0.0, 0), cd(0.0, 0);
-                Vector3f e(0, 0, 5);
+                Matrix4cf m;
+                m << cd(0.1, 0), cd(-0.1, 0), cd(1.0, 0), cd(0.0, 0),
+                    cd(-0.1, 0), cd(0.1, 0), cd(0.0, 0), cd(-1, 0),
+                    cd(1.0, 0), cd(0.0, 0), cd(0.0, 0), cd(0.0, 0),
+                    cd(0.0, 0), cd(-1, 0), cd(0.0, 0), cd(0.0, 0);
+                Vector4f e(0, 0, 5, 0);
                 CHECK(z.isApprox(e));
                 CHECK(A.isApprox(m));
             }
@@ -304,3 +310,4 @@ SCENARIO("Testing matrix construction when component is not connected") {
         }
     }
 }
+

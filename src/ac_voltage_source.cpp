@@ -3,25 +3,16 @@
 ACVoltageSource::ACVoltageSource(
         const std::string& name,
         float voltage,
-        float frequency,
         std::shared_ptr<Node> input,
         std::shared_ptr<Node> output
-    ) : ActiveComponent(name, input, output), voltage_(voltage), frequency_(frequency) { }
+    ) : ActiveComponent(name, input, output), voltage_(voltage) { }
 
 float ACVoltageSource::GetValue() const {
     return voltage_;
 }
 
-float ACVoltageSource::GetFrequency() const {
-    return frequency_;
-}
-
 void ACVoltageSource::SetValue(float newval) {
     voltage_ = newval;
-}
-
-void ACVoltageSource::SetFrequency(float newval) {
-    frequency_ = newval;
 }
 
 ComponentType ACVoltageSource::GetType() const {
