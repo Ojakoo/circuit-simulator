@@ -12,7 +12,6 @@
 #include <SFML/Window/Event.hpp>
 
 #include "save_and_load.hpp"
-#include "save_and_load.hpp"
 
 #include "gui_components/gui_resistor.hpp"
 #include "gui_components/gui_capacitor.hpp"
@@ -37,13 +36,17 @@ enum GUIAction {
     ADDING_GROUND
 };
 
+const float distance(sf::Vector2f &a, sf::Vector2f &b);
+const float dot(const sf::Vector2f &a, const sf::Vector2f &b);
+sf::Vector2i MapCoordsToClosest(sf::Vector2i coords);
+
 
 class CircuitSimulatorGUI : public sf::RenderWindow {
     public:
         CircuitSimulatorGUI(int width, int height, const std::string &title);
         ~CircuitSimulatorGUI() = default;
         
-        void main_loop();
+        void MainLoop();
 
         void ProcessEvents();
 
@@ -95,6 +98,5 @@ class CircuitSimulatorGUI : public sf::RenderWindow {
         sf::Cursor cursor_;
         sf::VertexArray helper_lines_ = sf::VertexArray(sf::Lines, 4);
         imgui_addons::ImGuiFileBrowser file_dialog_;
-        sf::VertexArray lines;
         float popup_value_;
 };
