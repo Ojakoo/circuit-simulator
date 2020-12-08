@@ -121,7 +121,7 @@ SCENARIO("MNA solver calculates correctly") {
 }
 
 SCENARIO("Producing matrices from circuit with reactive elements") {
-    GIVEN("") {
+    GIVEN("Circuit with omega") {
 
         Circuit c = Circuit();
 
@@ -158,6 +158,48 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
 
             std::cout << solver << std::endl;
         }
+    }
+
+    GIVEN("Another circuit with Omega defined") {
+
+        Circuit c = Circuit();
+
+        std::shared_ptr<Node> g = c.AddNode("0");
+        std::shared_ptr<Node> n1 = c.AddNode("N1");
+        std::shared_ptr<Node> n2 = c.AddNode("N2");
+        std::shared_ptr<Node> n3 = c.AddNode("N3");
+
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 100, n1, n2);
+        std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 0.005, n2, n3);
+        std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 0.00002, n3, g);
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 12, g, n1);
+        c.SetOmega( 314.159265359 );
+        
+        c.AddComponent(r1);
+        c.AddComponent(l1);
+        c.AddComponent(c1);
+        c.AddComponent(s1);
+
+        c.ConstructMatrices();
+
+        MatrixXcf A = c.GetAMatrix();
+        VectorXf z = c.GetZMatrix();
+        std::map<std::string, int> node_indexes = c.GetNodeIndexes();
+        std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+
+        WHEN("solved") {
+            MNAsolver solver = MNAsolver();
+
+            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+
+            Eigen::VectorXcf Refx = MatrixXf::Zero(4, 1);
+            Refx << cd(12,0), cd(8.55495,-5.42883), cd(8.64023,-5.48295), cd(-0.0344505,-0.0542883);
+
+            THEN("") {
+                CHECK(solver.GetxVector().isApprox(Refx));
+            }
+        }
+
     }
 }
 
