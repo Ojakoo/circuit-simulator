@@ -191,18 +191,13 @@ SCENARIO("MNA solver calculates correctly") {
         std::map<std::string, int> node_indexes = c.GetNodeIndexes();
         std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
 
-        std::cout << "A:";
-        std::cout << A << std::endl;
-
         Eigen::VectorXcf Refx = MatrixXf::Zero(5, 1);
-        Refx << cd(4,0), cd(2,0), cd(2,0), cd(-4,0), cd(4,0);
+        Refx << cd(4,0), cd(2,0), cd(2,0), cd(-4,0), cd(-4,0);
         
         WHEN("") {
             MNAsolver solver = MNAsolver();
 
             solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
-
-            std::cout << solver << std::endl;
 
             THEN("") {
                 CHECK(solver.GetxVector().isApprox(Refx));
@@ -210,3 +205,4 @@ SCENARIO("MNA solver calculates correctly") {
         }
     }
 }
+

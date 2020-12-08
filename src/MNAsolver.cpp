@@ -4,12 +4,9 @@
 MNAsolver::MNAsolver(){}
 
 void MNAsolver::solveSteady(const MatrixXcf& A, const VectorXcf& z, std::map<std::string, int> node_indexes, std::map<std::string, int> voltage_source_indexes) {
-    std::cout << A << std::endl;
-    std::cout << z << std::endl;
 
     x_ = A.inverse()*z;
 
-    std::cout << x_ << std::endl;
     node_voltages_.clear();
     voltage_source_currents_.clear();
 
