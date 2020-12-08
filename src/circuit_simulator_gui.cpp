@@ -221,7 +221,7 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
             int verticies;
             int comps;
             iss >> node >> verticies >> comps;
-            auto w = std::make_shared<GUIWire>(circuit_);
+            auto w = std::make_shared<GUIWire>();
             auto n = circuit_.AddNode(node);
             wires_.push_back(w);
             w->SetNode(n);
@@ -501,9 +501,6 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     if ( action_ == DELETING_ELEMENT  && !clicked_component ) {
                         auto it = WireClick(mouse);
                         if (it != wires_.end()) {
-                            for (auto wire : wires_) {
-                                wire->DisconnectWire(*it);
-                            }
                             wires_.erase(it);
                         } else {
                             for (auto it = grounds_.begin(); it != grounds_.end(); it++) {
@@ -553,10 +550,13 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             // check if we clicked on wire
                             auto it = WireClick(mouse);
                             if (it != wires_.end()) {
-                                addingWire_->ConnectWire(*it);
-                                (*it)->ConnectWire(addingWire_);
-                                if (addingWire_->GetNode()) {
-                                    // the wire being added has a node.
+                                if ((addingWire_->GetNode() && (*it)->GetNode()) ||
+                                    !addingWire_->GetNode() && (*it)->GetNode()) {
+                                    // both adding wire and the clicked wire has a node
+                                    // or addingWire doenst have a node but clicked wire has
+                                    addingWire_->SetNode((*it)->GetNode());
+                                } else if (addingWire_->GetNode() && !(*it)->GetNode()) {
+                                    // addingwire has a node but the clicked wire doesn't
                                     (*it)->SetNode(addingWire_->GetNode());
                                 }
                             }
@@ -685,7 +685,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     action_ = DELETING_ELEMENT;
                 } else if (event.key.code == sf::Keyboard::W && event.key.control) {
                     if (!addingWire_ && action_ != DRAWING_WIRE) {
-                        AddingWire(std::make_shared<GUIWire>(circuit_));
+                        AddingWire(std::make_shared<GUIWire>());
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
@@ -791,7 +791,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Wire", "CTRL+W")) {
-                AddingWire(std::make_shared<GUIWire>(circuit_));
+                AddingWire(std::make_shared<GUIWire>());
             }
             if (ImGui::MenuItem("Flip", "CTRL+F")) {
                 action_ = ROTATING_COMPONENT;
@@ -817,19 +817,20 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         if (ImGui::BeginMenu("Simulate"))
         {
             if (ImGui::MenuItem("Steady state analysis")) {
-                /*
+                
                 circuit_.RemoveUnnecessaryNodes();
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
                     std::cout << *(it.second) << std::endl;
                 }
-                */
+                /*
                 circuit_.ConstructMatrices();
                 auto A = circuit_.GetAMatrix();
                 auto z = circuit_.GetZMatrix();
                 //std::cout << A << std::endl;
                 //std::cout << z << std::endl;
                 std::cout << A.inverse() * z << std::endl;
+                */
             }
             ImGui::EndMenu();
         }
@@ -927,7 +928,6 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw wires
     for (auto it : wires_) {
         draw(*it);
-        it->DrawInfo(*this);
     }
 
     // draw ground
