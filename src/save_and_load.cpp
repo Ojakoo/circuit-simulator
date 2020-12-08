@@ -10,8 +10,8 @@
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
-#include "dc_voltage_source.hpp"
-#include "dc_current_source.hpp"
+#include "voltage_source.hpp"
+#include "current_source.hpp"
 #include "node.hpp"
 #include "save_and_load.hpp"
 
@@ -35,10 +35,10 @@ void SaveNetList(Circuit& circuit, const std::string& file_name) {
             case INDUCTOR:
                 symbol = "L";
                 break;
-            case DC_VOLTAGE_SOURCE:
+            case VOLTAGE_SOURCE:
                 symbol = "V";
                 break;
-            case DC_CURRENT_SOURCE:
+            case CURRENT_SOURCE:
                 symbol = "J";
                 break;
         }
@@ -97,8 +97,7 @@ Circuit LoadNetList(const std::string& file_name) {
 
             std::shared_ptr<Node> in = circuit.AddNode(input_node);
             std::shared_ptr<Node> out = circuit.AddNode(output_node);
-            
-            iss >> type >> name >> input_node >> output_node >> value;
+        
             if ( type == "R" ) {
                 std::shared_ptr<Resistor> R = std::make_shared<Resistor>(name, value, in, out);
                 circuit.AddComponent(R);
@@ -109,7 +108,7 @@ Circuit LoadNetList(const std::string& file_name) {
                 std::shared_ptr<Capacitor> C = std::make_shared<Capacitor>(name, value, in, out);
                 circuit.AddComponent(C);
             } else if ( type == "V" ) {
-                std::shared_ptr<DCVoltageSource> V = std::make_shared<DCVoltageSource>(name, value, in, out);
+                std::shared_ptr<VoltageSource> V = std::make_shared<VoltageSource>(name, value, in, out);
                 circuit.AddComponent(V);
             } else {
                 throw std::runtime_error("Invalid component type found in netlist.");

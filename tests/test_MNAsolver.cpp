@@ -10,9 +10,8 @@
 #include "resistor.hpp"
 #include "inductor.hpp"
 #include "capacitor.hpp"
-#include "ac_voltage_source.hpp"
-#include "dc_voltage_source.hpp"
-#include "dc_current_source.hpp"
+#include "voltage_source.hpp"
+#include "current_source.hpp"
 #include "node.hpp"
 #include "save_and_load.hpp"
 #include "Eigen/Dense"
@@ -67,9 +66,9 @@ SCENARIO("MNA solver calculates correctly") {
         std::shared_ptr<Node> n3 = c.AddNode("N003");
         std::shared_ptr<Node> g = c.AddNode("0");
 
-        std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 6, g, n1);
-        std::shared_ptr<DCVoltageSource> s2 = std::make_shared<DCVoltageSource>("S2", 4, n2, n3);
-        std::shared_ptr<DCCurrentSource> s3 = std::make_shared<DCCurrentSource>("S3", 5, n1, n2);
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 6, g, n1);
+        std::shared_ptr<VoltageSource> s2 = std::make_shared<VoltageSource>("S2", 4, n2, n3);
+        std::shared_ptr<CurrentSource> s3 = std::make_shared<CurrentSource>("S3", 5, n1, n2);
 
         std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n2, g);
         std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n1, n2);
@@ -136,7 +135,7 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
         std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 0.00025, n2, n3);
         std::shared_ptr<Capacitor> c2 = std::make_shared<Capacitor>("C1", 0.0003333, n1, n2);
 
-        std::shared_ptr<ACVoltageSource> s1 = std::make_shared<ACVoltageSource>("S1", 4, g, n3);
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 4, g, n3);
         c.SetOmega( 2000 );
 
         c.AddComponent(r1);
@@ -172,7 +171,7 @@ SCENARIO("MNA solver calculates correctly") {
         std::shared_ptr<Node> n3 = c.AddNode("N003");
         std::shared_ptr<Node> g = c.AddNode("0");
 
-        std::shared_ptr<DCVoltageSource> s1 = std::make_shared<DCVoltageSource>("S1", 4, g, n1);
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 4, g, n1);
 
         std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n1, n2);
         std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n2, n3);
