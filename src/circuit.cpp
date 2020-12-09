@@ -58,7 +58,7 @@ void Circuit::ConstructMatrices() {
     // count inductors and voltage sources
     for ( auto it : components_ ) {
         if ( it->GetType() == INDUCTOR && omega == 0) {
-            inductor_indexes_[it->GetName()] = l;
+            inductor_indexes_[it->GetName()] = l + n;
             l += 1;
         }
         if ( it->GetType() == VOLTAGE_SOURCE ) {
@@ -130,13 +130,14 @@ void Circuit::ConstructMatrices() {
                 if ( type == INDUCTOR && omega == 0) {
                     int idx = inductor_indexes_[name];
                     
+                    //A_( idx, idx ) = cd(0, (- 1 / (component->GetValue() * omega)));
                     if ( out->GetType() != GROUND ) {
-                        A_( node_indexes_[out_name], m + n + idx ) = 1;
-                        A_( m + n + idx, node_indexes_[out_name]) = 1;
+                        A_( node_indexes_[out_name], idx ) = 1;
+                        A_( idx, node_indexes_[out_name]) = 1;
                     }
                     if ( in->GetType() != GROUND ) {
-                        A_( node_indexes_[in_name], m + n + idx ) = -1;
-                        A_( m + n + idx, node_indexes_[in_name]) = -1;
+                        A_( node_indexes_[in_name], idx ) = -1;
+                        A_( idx, node_indexes_[in_name]) = -1;
                     }
                 }
 
@@ -149,7 +150,7 @@ void Circuit::ConstructMatrices() {
                     case VOLTAGE_SOURCE:
                         if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
                             //if voltage source is not mapped map it for future reference
-                            voltage_source_indexes_[name] = n + voltage_sources_count;
+                            voltage_source_indexes_[name] = n + l + voltage_sources_count;
                             voltage_sources_count++;
                         }
                         if ( out->GetType() != GROUND ) {

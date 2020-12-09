@@ -41,11 +41,12 @@ SCENARIO("MNA solver calculates correctly") {
         node_indexes_[ "N003" ] = 2;
         std::map<std::string, int> voltage_source_indexes_;
         voltage_source_indexes_[ "S1" ] = 3;
+        std::map<std::string, int> inductor_indexes_;
 
         WHEN("") {
             MNAsolver solver = MNAsolver();
 
-            solver.solveSteady(A, z, node_indexes_, voltage_source_indexes_);
+            solver.solveSteady(A, z, 0, node_indexes_, voltage_source_indexes_, inductor_indexes_);
 
             const VectorXcf x = solver.GetxVector();
 
@@ -87,6 +88,7 @@ SCENARIO("MNA solver calculates correctly") {
         VectorXf z = c.GetZMatrix();
         std::map<std::string, int> node_indexes = c.GetNodeIndexes();
         std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+        std::map<std::string, int> inductor_indexes = c.GetInductorIndexes();
 
         std::map<std::string, cd> node_voltages_ref;
         node_voltages_ref[ "N001" ] = cd(6,0);
@@ -103,7 +105,7 @@ SCENARIO("MNA solver calculates correctly") {
         WHEN("") {
             MNAsolver solver = MNAsolver();
 
-            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+            solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
 
             THEN("") {
                 CHECK(solver.GetxVector().isApprox(Refx));
@@ -150,13 +152,12 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
         VectorXf z = c.GetZMatrix();
         std::map<std::string, int> node_indexes = c.GetNodeIndexes();
         std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+        std::map<std::string, int> inductor_indexes = c.GetInductorIndexes();
 
         WHEN("") {
             MNAsolver solver = MNAsolver();
 
-            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
-
-            std::cout << solver << std::endl;
+            solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
         }
     }
 
@@ -186,20 +187,24 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
         VectorXf z = c.GetZMatrix();
         std::map<std::string, int> node_indexes = c.GetNodeIndexes();
         std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+        std::map<std::string, int> inductor_indexes = c.GetInductorIndexes();
 
         WHEN("solved") {
             MNAsolver solver = MNAsolver();
 
-            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+            solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
 
             Eigen::VectorXcf Refx = MatrixXf::Zero(4, 1);
             Refx << cd(12,0), cd(8.55495,-5.42883), cd(8.64023,-5.48295), cd(-0.0344505,-0.0542883);
+            
+            CHECK(solver.GetxVector().isApprox(Refx));
+            
+            THEN("Check that currents are correctly calculated") {
+                solver.setCurrents( c.GetComponents(), c.GetOmega() );
 
-            THEN("") {
-                CHECK(solver.GetxVector().isApprox(Refx));
+                solver.resultListed( std::cout );
             }
         }
-
     }
 }
 
@@ -215,8 +220,8 @@ SCENARIO("MNA solver calculates correctly") {
 
         std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 4, g, n1);
 
-        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n1, n2);
-        std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n2, n3);
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R1", 0.5, n1, n2);
+        std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R2", 0.5, n2, n3);
         std::shared_ptr<Resistor> r3 = std::make_shared<Resistor>("R3", 0.5, n3, g);
         std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 5, n2, n3);
 
@@ -232,6 +237,7 @@ SCENARIO("MNA solver calculates correctly") {
         VectorXf z = c.GetZMatrix();
         std::map<std::string, int> node_indexes = c.GetNodeIndexes();
         std::map<std::string, int> voltage_source_indexes = c.GetVoltageSourceIndexes();
+        std::map<std::string, int> inductor_indexes = c.GetInductorIndexes();
 
         Eigen::VectorXcf Refx = MatrixXf::Zero(5, 1);
         Refx << cd(4,0), cd(2,0), cd(2,0), cd(-4,0), cd(-4,0);
@@ -239,10 +245,16 @@ SCENARIO("MNA solver calculates correctly") {
         WHEN("") {
             MNAsolver solver = MNAsolver();
 
-            solver.solveSteady(A, z, node_indexes, voltage_source_indexes);
+            solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
+
+            CHECK(solver.GetxVector().isApprox(Refx));
 
             THEN("") {
-                CHECK(solver.GetxVector().isApprox(Refx));
+                THEN("Check that currents are correctly calculated") {
+                solver.setCurrents( c.GetComponents(), c.GetOmega() );
+
+                solver.resultListed( std::cout );
+            }
             }
         }
     }

@@ -11,6 +11,8 @@
 
 using namespace Eigen;
 
+typedef std::complex<float> cd;
+
 class Circuit {
 public:
     Circuit() {}
@@ -23,6 +25,7 @@ public:
  
     const std::map<std::string, int> GetNodeIndexes() const;
     const std::map<std::string, int> GetVoltageSourceIndexes() const;
+    const std::map<std::string, int> GetInductorIndexes() const { return inductor_indexes_; };
 
     void SetOmega( float omega ) { omega_ = omega; };
 
