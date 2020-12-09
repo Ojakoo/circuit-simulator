@@ -742,7 +742,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
     /*
     Renders main window's menubar.
     */
-    bool open = false, save = false;
+    bool open = false, save = false, ac = false;
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -816,8 +816,9 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         }
         if (ImGui::BeginMenu("Simulate"))
         {
-            if (ImGui::MenuItem("Steady state analysis")) {
+            if (ImGui::MenuItem("Steady state DC analysis")) {
                 
+                circuit_.SetOmega(0.0);
                 circuit_.RemoveUnnecessaryNodes();
                 std::cout << circuit_ << std::endl;
                 for (auto it: circuit_.GetNodes()) {
@@ -831,6 +832,10 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 //std::cout << z << std::endl;
                 std::cout << A.inverse() * z << std::endl;
                 */
+            }
+            if (ImGui::MenuItem("Steady state AC analysis")) {
+                ac = true;
+                std::cout << ac << std::endl;
             }
             ImGui::EndMenu();
         }
@@ -868,6 +873,31 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 break;
         }
         ImGui::EndMainMenuBar();
+    }
+
+    if (ac) ImGui::OpenPopup("Simulate stady state AC");
+
+    if (ImGui::BeginPopupModal("Simulate stady state AC")) {
+        static float w = 0.0f;
+        ImGui::Text("Enter angluar frequency [w]");
+        ImGui::InputFloat("Value", &w, 0.0f, 0.0f, "%.3f");
+        if (ImGui::Button("OK")) {
+            if (w > 0) {
+                circuit_.SetOmega(w);
+            } else {
+                circuit_.SetOmega(0.0);
+            }
+            circuit_.RemoveUnnecessaryNodes();
+            std::cout << circuit_ << std::endl;
+            for (auto it: circuit_.GetNodes()) {
+                std::cout << *(it.second) << std::endl;
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
 
     if(open)

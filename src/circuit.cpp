@@ -83,7 +83,7 @@ void Circuit::ConstructMatrices() {
         std::string out_name = out->GetName();
         std::string in_name = in->GetName();
 
-        std::complex<float> admittance;
+        std::complex<float> admittance = std::complex<float>(0.0, 0.0);
 
         switch ( cls ) {
             case PASSIVE:
@@ -92,20 +92,22 @@ void Circuit::ConstructMatrices() {
                 */
                 switch ( type ) {
                     case RESISTOR:
-                        admittance = std::complex<float>(
-                            1 / component->GetValue(), 0
-                        );  // Y = 1 / Z = 1 / R
+                        if (component->GetValue() > 0.0) {
+                            admittance = std::complex<float>(
+                                1 / component->GetValue(), 0
+                            );  // Y = 1 / Z = 1 / R
+                        }
                         break;
                     case CAPACITOR:
-                        if (omega != 0) {
+                        if (omega != 0 && component->GetValue() > 0.0) {
                             admittance = std::complex<float>(
                                 0, (component->GetValue() * omega)
                             );  // Y = 1 / Z = j*w*C
                         }
                         break;
                     case INDUCTOR:
-                        if (omega != 0) {
-                            admittance = std::complex<float>(
+                        if (omega != 0 && component->GetValue() > 0.0) {
+                           admittance = std::complex<float>(
                                 0, (- 1 / (component->GetValue() * omega))
                             );  // Y = 1 / Z = -j / (w*L) 
                         }
@@ -129,8 +131,6 @@ void Circuit::ConstructMatrices() {
 
                 if ( type == INDUCTOR && omega == 0) {
                     int idx = inductor_indexes_[name];
-                    
-                    //A_( idx, idx ) = cd(0, (- 1 / (component->GetValue() * omega)));
                     if ( out->GetType() != GROUND ) {
                         A_( node_indexes_[out_name], idx ) = -1;
                         A_( idx, node_indexes_[out_name]) = -1;
