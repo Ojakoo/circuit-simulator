@@ -105,7 +105,7 @@ void Circuit::ConstructMatrices() {
                         break;
                     case INDUCTOR:
                         if (omega != 0) {
-                           admittance = std::complex<float>(
+                            admittance = std::complex<float>(
                                 0, (- 1 / (component->GetValue() * omega))
                             );  // Y = 1 / Z = -j / (w*L) 
                         }
@@ -132,12 +132,12 @@ void Circuit::ConstructMatrices() {
                     
                     //A_( idx, idx ) = cd(0, (- 1 / (component->GetValue() * omega)));
                     if ( out->GetType() != GROUND ) {
-                        A_( node_indexes_[out_name], idx ) = 1;
-                        A_( idx, node_indexes_[out_name]) = 1;
+                        A_( node_indexes_[out_name], idx ) = -1;
+                        A_( idx, node_indexes_[out_name]) = -1;
                     }
                     if ( in->GetType() != GROUND ) {
-                        A_( node_indexes_[in_name], idx ) = -1;
-                        A_( idx, node_indexes_[in_name]) = -1;
+                        A_( node_indexes_[in_name], idx ) = 1;
+                        A_( idx, node_indexes_[in_name]) = 1;
                     }
                 }
 

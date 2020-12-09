@@ -35,7 +35,6 @@ class MNAsolver {
 
 
     private:
-        MatrixXcf test = MatrixXcf::Zero(3,3);
         VectorXcf x_;
         VectorXcf i_;
         std::map<std::string, cd> node_voltages_;

@@ -243,8 +243,8 @@ SCENARIO("Producing matricies from circuit that is read from file") {
             THEN("Matricies are are built correctly") {
                 Matrix4cf m;
                 m << cd(0.1, 0), cd(-0.1, 0), cd(0.0, 0), cd(1.0, 0),
-                    cd(-0.1, 0), cd(0.1, 0), cd(1.0, 0), cd(0, 0),
-                    cd(0.0, 0), cd(1.0, 0), cd(0.0, 0), cd(0.0, 0),
+                    cd(-0.1, 0), cd(0.1, 0), cd(-1.0, 0), cd(0, 0),
+                    cd(0.0, 0), cd(-1.0, 0), cd(0.0, 0), cd(0.0, 0),
                     cd(1.0, 0), cd(0, 0), cd(0.0, 0), cd(0.0, 0);
                 Vector4f e(0, 0, 0, 5);
                 CHECK(z.isApprox(e));
@@ -333,8 +333,8 @@ SCENARIO("Circuit with inductor") {
             AND_THEN("A matrix is built correctly") {
                 Matrix4cf m;
                 m << cd(0.2, 0), cd(-0.2, 0), cd(0.0, 0), cd(1.0, 0.0),
-                     cd(-0.2, 0), cd(0.2, 0), cd(-1.0, 0), cd(0.0, 0.0),
-                     cd(0, 0), cd(-1.0, 0), cd(0.0, 0), cd(0.0, 0.0),
+                     cd(-0.2, 0), cd(0.2, 0), cd(1.0, 0), cd(0.0, 0.0),
+                     cd(0, 0), cd(1.0, 0), cd(0.0, 0), cd(0.0, 0.0),
                      cd(1.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0);
                 CHECK(A.isApprox(m));
             }
@@ -382,13 +382,12 @@ SCENARIO("Circuit with inductors in series") {
 
             AND_THEN("Result is correct") {
                 VectorXf e(6, 1);
-                e << 10, 0, 0, -2, -2, -2;
+                e << 10, 0, 0, 2, 2, -2;
                 CHECK((A.inverse() * z).isApprox(e));
             }
         }
     }
 }
-
 
 SCENARIO("Circuit with inductors and capacitors") {
     GIVEN("Circuit to construct matrix from") {
@@ -426,7 +425,7 @@ SCENARIO("Circuit with inductors and capacitors") {
 
             AND_THEN("Result is correct") {
                 VectorXf e(4, 1);
-                e << 10, 0, -2, -2;
+                e << 10, 0, 2, -2;
                 CHECK((A.inverse() * z).isApprox(e));
             }
         }

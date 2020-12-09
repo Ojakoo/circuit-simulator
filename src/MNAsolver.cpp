@@ -16,6 +16,7 @@ void MNAsolver::solveSteady(
 
     node_voltages_.clear();
     voltage_source_currents_.clear();
+    passive_component_currents_.clear();
 
     for ( auto const& i : node_indexes ) {
         node_voltages_[ i.first ] = x_( i.second );
@@ -24,6 +25,7 @@ void MNAsolver::solveSteady(
         voltage_source_currents_[ i.first ] = x_( i.second );
     }
     for ( auto const& i : inductor_indexes ) {
+        std::cout << i.first << " " << i.second << std::endl;
         passive_component_currents_[ i.first ] = x_( i.second );
     }
 }
@@ -42,7 +44,6 @@ std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
 
 void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components, float omega ) {
     // int omega = 0.0; //for ac circuit
-    passive_component_currents_.clear();
 
     std::map<std::pair<std::string, std::string>,std::list<std::shared_ptr<Component>>> parallel_components_map;
 
@@ -69,11 +70,14 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
         cd total_admittance = (0,0);
         bool short_circuit = false;
 
+        std::cout << "calculate total admittance l73\n";
+        //calculate total admittance
         for ( auto const& component : obj.second ) {
             ComponentType type = component->GetType();
 
             switch ( type ) {
                 case RESISTOR:
+                    std::cout << "type:" << type << " name:" << component->GetName() << " value:" << component->GetValue() << " l80\n";
                     total_admittance += cd(1 / component->GetValue(), 0);  
                     // Y = 1 / Z = 1 / R
                     break;
@@ -87,15 +91,17 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                     if (omega != 0) {
                         total_admittance += cd(0, (- 1 / (component->GetValue() * omega)));  
                         // Y = 1 / Z = -j / (w*L) 
+                        break;
                     } else {
                         short_circuit = true;
+                        break;
                     }
-                    break;
                 default:
                     break;
             }
         }
 
+        //
         for ( auto const& component : obj.second ) {
             ComponentType type = component->GetType();
             std::string name = component->GetName();
@@ -111,12 +117,13 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
             }
             cd V_difference = in_value - out_value;
 
+            std::cout << name << " short: " << short_circuit << " V_dif:" << V_difference << " total admittance:" << total_admittance << " l120\n"; 
+
             if ( omega == 0 ) {
                 // if short circuit then other than inductor I = 0   
                 if ( short_circuit ) {
                     switch ( type ) {
                         case RESISTOR:
-                            std::cout << short_circuit << name << std::endl;
                         case CAPACITOR:
                             passive_component_currents_[name] = (0,0);
                             break;
@@ -129,7 +136,6 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                 } else {
                     switch ( type ) {
                         case RESISTOR:
-                            std::cout << short_circuit << name << std::endl;
                             passive_component_currents_[name] = ( cd(1 / component->GetValue(), 0) / (total_admittance) ) * V_difference * total_admittance;
                             break;
                         case CAPACITOR:
