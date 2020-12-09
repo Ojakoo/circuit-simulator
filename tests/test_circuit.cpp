@@ -226,8 +226,8 @@ SCENARIO("Producing matricies from circuit that is read from file") {
 
             c.ConstructMatrices();
 
-            MatrixXcf A = c.GetAMatrix();
-            VectorXf z = c.GetZMatrix();
+            Eigen::MatrixXcf A = c.GetAMatrix();
+            Eigen::VectorXf z = c.GetZMatrix();
     
             THEN("There is 4 components in circuit") {
                 CHECK(c.GetComponents().size() == 4);
@@ -242,11 +242,11 @@ SCENARIO("Producing matricies from circuit that is read from file") {
             
             THEN("Matricies are are built correctly") {
                 Matrix4cf m;
-                m << cd(0.1, 0), cd(-0.1, 0), cd(1.0, 0), cd(0.0, 0),
-                    cd(-0.1, 0), cd(0.1, 0), cd(0.0, 0), cd(1, 0),
-                    cd(1.0, 0), cd(0.0, 0), cd(0.0, 0), cd(0.0, 0),
-                    cd(0.0, 0), cd(1, 0), cd(0.0, 0), cd(0.0, 0);
-                Vector4f e(0, 0, 5, 0);
+                m << cd(0.1, 0), cd(-0.1, 0), cd(0.0, 0), cd(1.0, 0),
+                    cd(-0.1, 0), cd(0.1, 0), cd(1.0, 0), cd(0, 0),
+                    cd(0.0, 0), cd(1.0, 0), cd(0.0, 0), cd(0.0, 0),
+                    cd(1.0, 0), cd(0, 0), cd(0.0, 0), cd(0.0, 0);
+                Vector4f e(0, 0, 0, 5);
                 CHECK(z.isApprox(e));
                 CHECK(A.isApprox(m));
             }
@@ -290,9 +290,10 @@ SCENARIO("Testing matrix construction when component is not connected") {
             THEN("Matricies are are built correctly") {
                 Matrix2cf m;
                 m << cd(0, 0), cd(1, 0),
-                     cd(1, 0),   cd(0 , 0);
-                Vector2f e(0, 6);
-                CHECK(z.isApprox(e));
+                     cd(1, 0),  cd(0, 0);
+                Vector2cf e;
+                e << cd(0,0), cd(6,0);
+                CHECK(e.isApprox(z));
                 CHECK(A.isApprox(m));
             }
         }
@@ -331,16 +332,15 @@ SCENARIO("Circuit with inductor") {
     
             AND_THEN("A matrix is built correctly") {
                 Matrix4cf m;
-                m << cd(0.2, 0), cd(-0.2, 0), cd(1.0, 0), cd(0.0, 0.0),
-                     cd(-0.2, 0), cd(0.2, 0), cd(0.0, 0), cd(-1.0, 0.0),
-                     cd(1.0, 0), cd(0.0, 0), cd(0.0, 0), cd(0.0, 0.0),
-                     cd(0.0, 0.0), cd(-1.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0);
-                std::cout << A << std::endl;
+                m << cd(0.2, 0), cd(-0.2, 0), cd(0.0, 0), cd(1.0, 0.0),
+                     cd(-0.2, 0), cd(0.2, 0), cd(-1.0, 0), cd(0.0, 0.0),
+                     cd(0, 0), cd(-1.0, 0), cd(0.0, 0), cd(0.0, 0.0),
+                     cd(1.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0);
                 CHECK(A.isApprox(m));
             }
 
             AND_THEN("z vector is built correctly") {
-                Vector4f e(0, 0, 10, 0);
+                Vector4f e(0, 0, 0, 10);
                 CHECK(z.isApprox(e));
             }
         }
@@ -383,7 +383,6 @@ SCENARIO("Circuit with inductors in series") {
             AND_THEN("Result is correct") {
                 VectorXf e(6, 1);
                 e << 10, 0, 0, -2, -2, -2;
-                std::cout << e << std::endl;
                 CHECK((A.inverse() * z).isApprox(e));
             }
         }

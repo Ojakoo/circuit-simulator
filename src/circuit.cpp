@@ -181,22 +181,6 @@ void Circuit::ConstructMatrices() {
     }
 }
 
-const MatrixXcf Circuit::GetAMatrix() const {
-    return A_;
-}
-
-const VectorXf Circuit::GetZMatrix() const {
-    return z_;
-}
-
-const std::map<std::string, int> Circuit::GetNodeIndexes() const {
-    return node_indexes_;
-}
-
-const std::map<std::string, int> Circuit::GetVoltageSourceIndexes() const {
-    return voltage_source_indexes_;
-}
-
 const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     auto it = nodes_.find(node_name);
     if (it == nodes_.end()) {
@@ -239,8 +223,4 @@ std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {
         out << "\n" << *it;
     }
     return out.flush();
-}
-
-std::map<std::string, std::shared_ptr<Node>> Circuit::GetNodes() {
-    return nodes_;
 }

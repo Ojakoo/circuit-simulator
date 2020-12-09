@@ -20,11 +20,11 @@ public:
     const std::list<std::shared_ptr<Component>>& GetComponents() const;
 
     const float GetOmega() const { return omega_; };
-    const MatrixXcf GetAMatrix() const;
-    const VectorXf GetZMatrix() const;    
+    const MatrixXcf GetAMatrix() const { return A_; };
+    const VectorXf GetZMatrix() const { return z_;};    
  
-    const std::map<std::string, int> GetNodeIndexes() const;
-    const std::map<std::string, int> GetVoltageSourceIndexes() const;
+    const std::map<std::string, int> GetNodeIndexes() const { return node_indexes_; };
+    const std::map<std::string, int> GetVoltageSourceIndexes() const { return voltage_source_indexes_; };
     const std::map<std::string, int> GetInductorIndexes() const { return inductor_indexes_; };
 
     void SetOmega( float omega ) { omega_ = omega; };
@@ -36,7 +36,7 @@ public:
     void AddComponent(std::shared_ptr<Component> component);
     void ConstructMatrices();
     void RemoveComponent(std::shared_ptr<Component> component);
-    std::map<std::string, std::shared_ptr<Node>> GetNodes();
+    std::map<std::string, std::shared_ptr<Node>> GetNodes() { return nodes_; };
 
 private:
     MatrixXcf A_;
