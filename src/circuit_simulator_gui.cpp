@@ -80,7 +80,7 @@ std::list<std::shared_ptr<GUIWire>>::const_iterator CircuitSimulatorGUI::WireCli
                 sf::Vector2f projection = P_1 + t * (P_2 - P_1);
                 d = distance(mouse, projection);
             }
-            if (abs(d) <= 10 ) {
+            if (abs(d) <= 5 ) {
                 // found one!
                 return it;
             }
