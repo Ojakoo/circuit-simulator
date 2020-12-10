@@ -7,6 +7,7 @@
 #include "ImGuiFileBrowser.h"
 
 #include "circuit_simulator_gui.hpp"
+#include "MNAsolver.hpp"
 
 
 const float distance(sf::Vector2f &a, sf::Vector2f &b) {
@@ -278,7 +279,7 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
                 save_file << "C ";
                 break;
             case INDUCTOR:
-                save_file << "C ";
+                save_file << "L ";
                 break;
             case VOLTAGE_SOURCE:
                 save_file << "V ";
@@ -458,6 +459,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
                                     deleted = true;
+                                    clicked_component = nullptr;
                                     break;
                                 case EDIT_VALUE:
                                     editingComponent_ = *it;
@@ -500,7 +502,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                     }
 
-                    if ( action_ == DELETING_ELEMENT  && !clicked_component ) {
+                    if ( action_ == DELETING_ELEMENT  && !clicked_component && !deleted) {
                         auto it = WireClick(mouse);
                         if (it != wires_.end()) {
                             wires_.erase(it);
@@ -824,25 +826,27 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 circuit_.SetOmega(0.0);
                 circuit_.RemoveUnnecessaryNodes();
                 if (circuit_.HasGround()) {
-                    std::cout << circuit_ << std::endl;
-                    for (auto it: circuit_.GetNodes()) {
-                        std::cout << *(it.second) << std::endl;
-                    }
+                    circuit_.ConstructMatrices();
+                    auto solver = MNAsolver();
+                    solver.solveSteady(
+                        circuit_.GetAMatrix(),
+                        circuit_.GetZMatrix(),
+                        circuit_.GetOmega(),
+                        circuit_.GetNodeIndexes(),
+                        circuit_.GetVoltageSourceIndexes(),
+                        circuit_.GetInductorIndexes()
+                    );
+                    solver.setCurrents(
+                        circuit_.GetComponents(),
+                        circuit_.GetOmega()
+                    );
+                    solver.resultListed(std::cout);
                 } else {
                     std::cout << "Add ground before simulating!" << std::endl;
                 }
-                /*
-                circuit_.ConstructMatrices();
-                auto A = circuit_.GetAMatrix();
-                auto z = circuit_.GetZMatrix();
-                //std::cout << A << std::endl;
-                //std::cout << z << std::endl;
-                std::cout << A.inverse() * z << std::endl;
-                */
             }
             if (ImGui::MenuItem("Steady state AC analysis")) {
                 ac = true;
-                std::cout << ac << std::endl;
             }
             ImGui::EndMenu();
         }
@@ -895,10 +899,26 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 circuit_.SetOmega(0.0);
             }
             circuit_.RemoveUnnecessaryNodes();
-            std::cout << circuit_ << std::endl;
-            for (auto it: circuit_.GetNodes()) {
-                std::cout << *(it.second) << std::endl;
+            if (circuit_.HasGround()) {
+                circuit_.ConstructMatrices();
+                auto solver = MNAsolver();
+                solver.solveSteady(
+                    circuit_.GetAMatrix(),
+                    circuit_.GetZMatrix(),
+                    circuit_.GetOmega(),
+                    circuit_.GetNodeIndexes(),
+                    circuit_.GetVoltageSourceIndexes(),
+                    circuit_.GetInductorIndexes()
+                );
+                solver.setCurrents(
+                    circuit_.GetComponents(),
+                    circuit_.GetOmega()
+                );
+                solver.resultListed(std::cout);
+            } else {
+                std::cout << "Add ground before simulating!" << std::endl;
             }
+            ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel")) {
