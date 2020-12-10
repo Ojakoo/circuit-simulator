@@ -37,6 +37,7 @@ public:
     void ConstructMatrices();
     void RemoveComponent(std::shared_ptr<Component> component);
     std::map<std::string, std::shared_ptr<Node>> GetNodes() { return nodes_; };
+    bool HasGround();
 
 private:
     MatrixXcf A_;

@@ -218,6 +218,15 @@ void Circuit::AddComponent(std::shared_ptr<Component> component) {
     components_.push_back(component);
 }
 
+bool Circuit::HasGround() {
+    for ( auto node : nodes_ ) {
+        if (node.second->GetType() == GROUND) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {
     for (auto it : circuit.GetComponents()) {
         out << "\n" << *it;

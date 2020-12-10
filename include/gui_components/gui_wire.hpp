@@ -28,7 +28,7 @@ class GUIWire : public sf::VertexArray {
 
         std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GetComponents();
 
-        void SetConnPoint(sf::Vector2i point);
+        void SetConnPoint(sf::Vector2f point);
 
         void DrawConns(sf::RenderWindow &window);
 

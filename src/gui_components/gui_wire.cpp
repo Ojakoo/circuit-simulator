@@ -45,7 +45,7 @@ std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GUIWire::GetC
     return components_;
 }
 
-void GUIWire::SetConnPoint(sf::Vector2i point) {
+void GUIWire::SetConnPoint(sf::Vector2f point) {
     sf::RectangleShape c;
     c.setPosition(point.x, point.y);
     c.setOrigin(5, 5);

@@ -559,8 +559,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     // addingwire has a node but the clicked wire doesn't
                                     (*it)->SetNode(addingWire_->GetNode());
                                 }
-                                auto closest = MapCoordsToClosest(sf::Vector2i(mouse.x, mouse.y));
-                                addingWire_->SetConnPoint(closest);
+                                addingWire_->SetConnPoint((*addingWire_)[count - 1].position);
                             }
                         }
                         if (!skip) {
@@ -822,9 +821,13 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 
                 circuit_.SetOmega(0.0);
                 circuit_.RemoveUnnecessaryNodes();
-                std::cout << circuit_ << std::endl;
-                for (auto it: circuit_.GetNodes()) {
-                    std::cout << *(it.second) << std::endl;
+                if (circuit_.HasGround()) {
+                    std::cout << circuit_ << std::endl;
+                    for (auto it: circuit_.GetNodes()) {
+                        std::cout << *(it.second) << std::endl;
+                    }
+                } else {
+                    std::cout << "Add ground before simulating!" << std::endl;
                 }
                 /*
                 circuit_.ConstructMatrices();
