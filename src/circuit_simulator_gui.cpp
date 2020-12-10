@@ -2,21 +2,32 @@
 #include <algorithm>
 #include <fstream>
 #include <set>
+#include <map>
 
 #include "ImGuiFileBrowser.h"
 
 #include "circuit_simulator_gui.hpp"
+#include "MNAsolver.hpp"
 
 
 const float distance(sf::Vector2f &a, sf::Vector2f &b) {
+    /*
+    Calculates distance between two points.
+    */
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
 const float dot(const sf::Vector2f &a, const sf::Vector2f &b) {
+    /*
+    Calculates dot product between two vectors.
+    */
     return a.x * b.x + a.y * b.y;
 }
 
 sf::Vector2i MapCoordsToClosest(sf::Vector2i coords) {
+    /*
+    Maps coordinates to closest grid.
+    */
     int offset_x = int(coords.x) % GRID_SIZE;
     if (offset_x > (GRID_SIZE / 2))
         coords.x += GRID_SIZE - offset_x;
@@ -33,6 +44,9 @@ sf::Vector2i MapCoordsToClosest(sf::Vector2i coords) {
 
 
 void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> component) {
+    /*
+    Method is called when user adds a new component.
+    */
     components_.push_back(component);
     addingComponent_ = component;
     movingComponent_ = component;
@@ -40,6 +54,9 @@ void CircuitSimulatorGUI::AddingComponent(std::shared_ptr<GUIComponent> componen
 }
 
 void CircuitSimulatorGUI::AddingWire(std::shared_ptr<GUIWire> wire) {
+    /*
+    Method is called when user adds a new wire.
+    */
     wires_.push_back(wire);
     (*wire)[0].color = sf::Color(0, 0, 0);
     addingWire_ = wire;
@@ -47,12 +64,14 @@ void CircuitSimulatorGUI::AddingWire(std::shared_ptr<GUIWire> wire) {
 }
 
 std::list<std::shared_ptr<GUIWire>>::const_iterator CircuitSimulatorGUI::WireClick(sf::Vector2f mouse) const {
+    /*
+    Method determines which wire was clicked and returns it.
+    */
     auto it = wires_.begin();
     for ( ; it != wires_.end(); it++) {
         for (int i = 0; i < (*it)->getVertexCount() - 1; i++) {
             auto P_1 = (*(*it))[i].position;
             auto P_2 = (*(*it))[i + 1].position;
-            // https://stackoverflow.com/a/1501725
             float d;
             float l2 = std::pow(P_2.x - P_1.x, 2) + std::pow(P_2.y - P_1.y, 2);
             if (l2 == 0.0) {
@@ -62,7 +81,7 @@ std::list<std::shared_ptr<GUIWire>>::const_iterator CircuitSimulatorGUI::WireCli
                 sf::Vector2f projection = P_1 + t * (P_2 - P_1);
                 d = distance(mouse, projection);
             }
-            if (abs(d) <= 10 ) {
+            if (abs(d) <= 5 ) {
                 // found one!
                 return it;
             }
@@ -72,6 +91,9 @@ std::list<std::shared_ptr<GUIWire>>::const_iterator CircuitSimulatorGUI::WireCli
 }
 
 void CircuitSimulatorGUI::CancelAllActions() {
+    /*
+    Cancels all actions and resets everything.
+    */
     action_ = NO_ACTION;
     movingComponent_ = nullptr;
     if (addingComponent_) {  // Remove the component being added
@@ -96,6 +118,9 @@ void CircuitSimulatorGUI::CancelAllActions() {
 }
 
 void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
+    /*
+    Method updates wire drawing helper lines according to mouse.
+    */
     helper_lines_[0].position = sf::Vector2f(0, closest.y);
     helper_lines_[1].position = sf::Vector2f(this->getSize().x,closest.y);
     helper_lines_[2].position = sf::Vector2f(closest.x, 0);
@@ -103,6 +128,9 @@ void CircuitSimulatorGUI::UpdateHelperLines(sf::Vector2i closest) {
 }
 
 void CircuitSimulatorGUI::Reset() {
+    /*
+    Resets everything in the circuit. Called when file is loaded.
+    */
     CancelAllActions();
     circuit_ = Circuit();
     resistors_ = 0;
@@ -118,6 +146,9 @@ void CircuitSimulatorGUI::Reset() {
 }
 
 void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
+    /*
+    Reads a circuit file from a file.
+    */
     Reset();
 
     std::ifstream ifstr(file);
@@ -126,7 +157,9 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
         throw std::runtime_error("Failed to read netlist file.");
     }
 
-    std::set<std::string> c = {"R", "L", "C", "V"};
+    std::set<std::string> c = {"R", "L", "C", "V", "J"};
+
+    std::map<std::string, std::shared_ptr<GUIComponent>> comp_map;
 
     while( !ifstr.eof() ) {
         std::string line;
@@ -180,18 +213,33 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
                 throw std::runtime_error("Invalid component type found in netlist.");
             }
             auto comp = components_.back();
+            comp_map[name] = comp;
             comp->setRotation(rot);
             comp->setPosition(x, y);
         } else if (type == "W") {
             // Wire
             std::string node;
             int verticies;
-            iss >> node >> verticies;
-            auto w = std::make_shared<GUIWire>(circuit_);
+            int comps;
+            iss >> node >> verticies >> comps;
+            auto w = std::make_shared<GUIWire>();
             auto n = circuit_.AddNode(node);
             wires_.push_back(w);
             w->SetNode(n);
             w->resize(verticies);
+            for (int j = 0; j < comps; j++) {
+                std::string line;
+                std::getline(ifstr, line);
+                std::stringstream iss(line);
+                std::string term, nam;
+                iss >> term >> nam;
+                TerminalType terminal = term == "IN" ? INPUT : OUTPUT;
+                auto iter = comp_map.find(nam);
+                if (iter != comp_map.end()) {
+                    // found comp!
+                    w->ConnectComponent((*iter).second, terminal);
+                }
+            }
             for (int i = 0; i < verticies; i++) {
                 std::string line;
                 std::getline(ifstr, line);
@@ -213,11 +261,13 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
             grounds_.push_back(g);
         }
     }
-
     ifstr.close();
 }
 
 void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
+    /*
+    Saves the currently built circuit into a file.
+    */
     std::ofstream save_file;
     save_file.open(file);
     for ( auto comp : components_ ) {
@@ -229,11 +279,13 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
                 save_file << "C ";
                 break;
             case INDUCTOR:
-                save_file << "C ";
+                save_file << "L ";
                 break;
             case VOLTAGE_SOURCE:
                 save_file << "V ";
                 break;
+            case CURRENT_SOURCE:
+                save_file << "J ";
             default:
                 break;
         }
@@ -249,7 +301,21 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
     }
     for ( auto wire : wires_ ) {
         auto node = wire->GetNode();
-        save_file << "W " << (node ? node->GetName() : "-") << " " << wire->getVertexCount() << std::endl;
+        save_file << "W " << (node ? node->GetName() : "-") << " " << wire->getVertexCount() << " ";
+        save_file << wire->GetComponents()[INPUT].size() + wire->GetComponents()[OUTPUT].size() << std::endl;
+        for ( auto pair : wire->GetComponents() ) {
+            for ( auto comp : pair.second ) {
+                switch (pair.first) {
+                    case INPUT:
+                        save_file << "IN ";
+                        break;
+                    case OUTPUT:
+                        save_file << "OUT ";
+                        break;
+                }
+                save_file << comp->GetName() << std::endl;;
+            }
+        }
         for (int i = 0; i < wire->getVertexCount(); i++) {
             save_file << (*wire)[i].position.x << " " << (*wire)[i].position.y << std::endl;
         } 
@@ -265,38 +331,26 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
 
 
 CircuitSimulatorGUI::CircuitSimulatorGUI(int width,int height, const std::string &title)
-            : sf::RenderWindow(sf::VideoMode(width, height), title) { 
-                this->setFramerateLimit(60);
-                ImGui::SFML::Init(*this);
-                lines = sf::VertexArray(sf::Lines, 200);
+    : sf::RenderWindow(sf::VideoMode(width, height), title) {
+        /*
+        Constructor
+        */
+        this->setFramerateLimit(60);
+        ImGui::SFML::Init(*this);
 
-                // FOR DEBUGGING
-                int k = 0;
-
-                // vertical helper lines
-                for ( int i = 0; i <= 640; i+=GRID_SIZE, k+=2) {
-                    lines[k].position = sf::Vector2f(i, 0);
-                    lines[k].color = sf::Color(197, 206, 219);
-                    lines[k + 1].position = sf::Vector2f(i, 480);
-                    lines[k + 1].color = sf::Color(197, 206, 219);
-                }
-
-                //  horizontal helper lines
-                for ( int j = 0; j <= 480; j+=GRID_SIZE, k+=2 ) {
-                    lines[k].position = sf::Vector2f(0, j);
-                    lines[k].color = sf::Color(197, 206, 219);
-                    lines[k + 1].position = sf::Vector2f(640, j);
-                    lines[k + 1].color = sf::Color(197, 206, 219);
-                }
-
-                helper_lines_[0].color = sf::Color(197, 206, 219, 100);
-                helper_lines_[1].color = sf::Color(197, 206, 219, 100);
-                helper_lines_[2].color = sf::Color(197, 206, 219, 100);
-                helper_lines_[3].color = sf::Color(197, 206, 219, 100);
-            }
+        // Helper lines for wire drawing
+        helper_lines_[0].color = sf::Color(197, 206, 219, 100);
+        helper_lines_[1].color = sf::Color(197, 206, 219, 100);
+        helper_lines_[2].color = sf::Color(197, 206, 219, 100);
+        helper_lines_[3].color = sf::Color(197, 206, 219, 100);
+}
 
 
 std::pair<TerminalType, sf::Vector2f> CircuitSimulatorGUI::TerminalClick(const sf::FloatRect bounds, const int rot, const sf::Vector2f mouse) const {
+    /*
+    Method determines which component's terminal was clicked.
+    Returns the terminal and coords where to connect the wire.
+    */
     TerminalType terminal;
     sf::Vector2f coords;
     if (rot == 90 || rot == 270) {  // components rotation is vertical
@@ -352,6 +406,9 @@ std::pair<TerminalType, sf::Vector2f> CircuitSimulatorGUI::TerminalClick(const s
 }
 
 void CircuitSimulatorGUI::ProcessEvents() {
+    /*
+    Poll and process events.
+    */
     sf::Event event;
     while (pollEvent(event)) {
         ImGui::SFML::ProcessEvent(event);
@@ -402,6 +459,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     circuit_.RemoveComponent((*it)->GetComponent());
                                     components_.erase(it);
                                     deleted = true;
+                                    clicked_component = nullptr;
                                     break;
                                 case EDIT_VALUE:
                                     editingComponent_ = *it;
@@ -420,7 +478,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto rot = clicked_component->getRotation();
                             auto pair = TerminalClick(bounds, rot, mouse);
                             if ( !(clicked_component->GetTerminalNode(pair.first)) ) {
-                                auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                auto node = circuit_.AddNode();
                                 nodes_++;
                                 clicked_component->ConnectNodeToTerminal(pair.first, node);
                             }
@@ -433,7 +491,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto it = WireClick(mouse);
                             if (it != wires_.end()) {
                                 if ( !(*it)->GetNode() ) {
-                                    auto node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    auto node = circuit_.AddNode();
                                     nodes_++;
                                     (*it)->SetNode(node);
                                 }
@@ -444,12 +502,9 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                     }
 
-                    if ( action_ == DELETING_ELEMENT  && !clicked_component ) {
+                    if ( action_ == DELETING_ELEMENT  && !clicked_component && !deleted) {
                         auto it = WireClick(mouse);
                         if (it != wires_.end()) {
-                            for (auto wire : wires_) {
-                                wire->DisconnectWire(*it);
-                            }
                             wires_.erase(it);
                         } else {
                             for (auto it = grounds_.begin(); it != grounds_.end(); it++) {
@@ -461,7 +516,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         }
                     }
 
-                    if ((addingWire_ && action_ == DRAWING_WIRE)) {
+                    if (addingWire_ && action_ == DRAWING_WIRE) {
                         bool skip = false;
                         int count = addingWire_->getVertexCount();
                         if (clicked_component) {
@@ -485,7 +540,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     node = addingWire_->GetNode();
                                 } else {
                                     // the wire doesn't have a node
-                                    node = circuit_.AddNode("N" + std::to_string(nodes_));
+                                    node = circuit_.AddNode();
                                     nodes_++;
                                     addingWire_->SetNode(node);
                                 }
@@ -495,17 +550,20 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                 clicked_component->ConnectWire(pair.first);
                                 addingWire_->ConnectComponent(clicked_component, pair.first);
                             }
-                            //clicked_component->SetTerminalRects(pair.first, pair.second);
                         } else {
                             // check if we clicked on wire
                             auto it = WireClick(mouse);
-                            if (it != wires_.end()) {
-                                addingWire_->ConnectWire(*it);
-                                (*it)->ConnectWire(addingWire_);
-                                if (addingWire_->GetNode()) {
-                                    // the wire being added has a node.
+                            if (it != wires_.end() && (*it) != addingWire_) {
+                                if ((addingWire_->GetNode() && (*it)->GetNode()) ||
+                                    !addingWire_->GetNode() && (*it)->GetNode()) {
+                                    // both adding wire and the clicked wire has a node
+                                    // or addingWire doenst have a node but clicked wire has
+                                    addingWire_->SetNode((*it)->GetNode());
+                                } else if (addingWire_->GetNode() && !(*it)->GetNode()) {
+                                    // addingwire has a node but the clicked wire doesn't
                                     (*it)->SetNode(addingWire_->GetNode());
                                 }
+                                addingWire_->SetConnPoint((*addingWire_)[count - 1].position);
                             }
                         }
                         if (!skip) {
@@ -632,7 +690,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                     action_ = DELETING_ELEMENT;
                 } else if (event.key.code == sf::Keyboard::W && event.key.control) {
                     if (!addingWire_ && action_ != DRAWING_WIRE) {
-                        AddingWire(std::make_shared<GUIWire>(circuit_));
+                        AddingWire(std::make_shared<GUIWire>());
                     }
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     CancelAllActions();
@@ -685,17 +743,19 @@ void CircuitSimulatorGUI::ProcessEvents() {
     }
 }
 
-
 void CircuitSimulatorGUI::RenderMenuBar() {
-    bool open = false, save = false;
+    /*
+    Renders main window's menubar.
+    */
+    bool open = false, save = false, ac = false;
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open", "CTRL+O")) {
+            if (ImGui::MenuItem("Open")) {
                 open = true;
             }
-            if (ImGui::MenuItem("Save", "CTRL+S")) {
+            if (ImGui::MenuItem("Save")) {
                 save = true;
             }
             ImGui::Separator();
@@ -736,7 +796,7 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Wire", "CTRL+W")) {
-                AddingWire(std::make_shared<GUIWire>(circuit_));
+                AddingWire(std::make_shared<GUIWire>());
             }
             if (ImGui::MenuItem("Flip", "CTRL+F")) {
                 action_ = ROTATING_COMPONENT;
@@ -761,14 +821,33 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         }
         if (ImGui::BeginMenu("Simulate"))
         {
-            if (ImGui::MenuItem("Steady state analysis")) {
+            if (ImGui::MenuItem("Steady state DC analysis")) {
+                
+                circuit_.SetOmega(0.0);
                 circuit_.RemoveUnnecessaryNodes();
-                std::cout << circuit_ << std::endl;
-                for (auto it: circuit_.GetNodes()) {
-                    std::cout << *(it.second) << std::endl;
+                if (circuit_.HasGround()) {
+                    circuit_.ConstructMatrices();
+                    auto solver = MNAsolver();
+                    solver.solveSteady(
+                        circuit_.GetAMatrix(),
+                        circuit_.GetZMatrix(),
+                        circuit_.GetOmega(),
+                        circuit_.GetNodeIndexes(),
+                        circuit_.GetVoltageSourceIndexes(),
+                        circuit_.GetInductorIndexes()
+                    );
+                    solver.setCurrents(
+                        circuit_.GetComponents(),
+                        circuit_.GetOmega()
+                    );
+                    solver.resultListed(std::cout);
+                } else {
+                    std::cout << "Add ground before simulating!" << std::endl;
                 }
             }
-            if (ImGui::MenuItem("Transient analysis", NULL, false, false)) {}
+            if (ImGui::MenuItem("Steady state AC analysis")) {
+                ac = true;
+            }
             ImGui::EndMenu();
         }
         ImGui::SameLine(ImGui::GetWindowWidth() - 150);
@@ -806,32 +885,67 @@ void CircuitSimulatorGUI::RenderMenuBar() {
         }
         ImGui::EndMainMenuBar();
     }
-    //Remember the name to ImGui::OpenPopup() and showFileDialog() must be same...
+
+    if (ac) ImGui::OpenPopup("Simulate stady state AC");
+
+    if (ImGui::BeginPopupModal("Simulate stady state AC")) {
+        static float w = 0.0f;
+        ImGui::Text("Enter angluar frequency [w]");
+        ImGui::InputFloat("Value", &w, 0.0f, 0.0f, "%.3f");
+        if (ImGui::Button("OK")) {
+            if (w > 0) {
+                circuit_.SetOmega(w);
+            } else {
+                circuit_.SetOmega(0.0);
+            }
+            circuit_.RemoveUnnecessaryNodes();
+            if (circuit_.HasGround()) {
+                circuit_.ConstructMatrices();
+                auto solver = MNAsolver();
+                solver.solveSteady(
+                    circuit_.GetAMatrix(),
+                    circuit_.GetZMatrix(),
+                    circuit_.GetOmega(),
+                    circuit_.GetNodeIndexes(),
+                    circuit_.GetVoltageSourceIndexes(),
+                    circuit_.GetInductorIndexes()
+                );
+                solver.setCurrents(
+                    circuit_.GetComponents(),
+                    circuit_.GetOmega()
+                );
+                solver.resultListed(std::cout);
+            } else {
+                std::cout << "Add ground before simulating!" << std::endl;
+            }
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
     if(open)
         ImGui::OpenPopup("Open File");
     if(save)
         ImGui::OpenPopup("Save File");
-        
-    /* Optional third parameter. Support opening only compressed rar/zip files. 
-     * Opening any other file will show error, return false and won't close the dialog.
-     */
+
     if(file_dialog_.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), ".txt"))
     {
         LoadCircuit(file_dialog_.selected_path);
-        //std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-        //std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
     }
     if(file_dialog_.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), ".txt"))
     {
         SaveCircuit(file_dialog_.selected_path);
-        //std::cout << file_dialog_.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-        //std::cout << file_dialog_.selected_path << std::endl;    // The absolute path to the selected file
-        //std::cout << file_dialog_.ext << std::endl;              // Access ext separately (For SAVE mode)
-        //Do writing of files based on extension here
     }
 }
 
 void CircuitSimulatorGUI::RenderPopup() {
+    /*
+    Renders component's value editing popup.
+    */
     if (editingComponent_ && action_ == EDIT_VALUE) {
         ImGui::OpenPopup("Edit value");
         if (ImGui::BeginPopupModal("Edit value", NULL)) {
@@ -857,19 +971,21 @@ void CircuitSimulatorGUI::RenderPopup() {
 
 
 void CircuitSimulatorGUI::DrawComponents() {
+    /*
+    Draws all symbols and wires.
+    */
     clear(sf::Color(148, 143, 129));
 
     // draw components
     for ( auto it : components_ ) {
         draw(*it);
         it->DrawInfo(*this);
-        //it->DrawTerminalRects(*this);
     }
 
     // draw wires
     for (auto it : wires_) {
         draw(*it);
-        it->DrawInfo(*this);
+        it->DrawConns(*this);
     }
 
     // draw ground
@@ -877,7 +993,6 @@ void CircuitSimulatorGUI::DrawComponents() {
         it->draw(*this);
     }
 
-    // draw(lines);
     // draw helper lines
     if (action_ == DRAWING_WIRE) {
         draw(helper_lines_);
@@ -885,7 +1000,7 @@ void CircuitSimulatorGUI::DrawComponents() {
 }
 
 
-void CircuitSimulatorGUI::main_loop() {
+void CircuitSimulatorGUI::MainLoop() {
     while (isOpen()) {
         ProcessEvents();
         ImGui::SFML::Update(*this, deltaClock_.restart());

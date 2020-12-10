@@ -37,17 +37,13 @@ class GUIComponent : public sf::Sprite {
 
         void DrawInfo(sf::RenderWindow &window);
 
-        void SetTerminalRects(TerminalType terminal, sf::Vector2f coords);
-
         void ConnectNodeToTerminal(TerminalType terminal, std::shared_ptr<Node> node);
 
         std::shared_ptr<Node> GetTerminalNode(TerminalType terminal) const;
 
         void ConnectWire(TerminalType terminal);
 
-        void RemoveWire(TerminalType terminal, Circuit &circuit);
-
-        const int GetWireCount(TerminalType terminal);
+        void RemoveWire(TerminalType terminal);
 
     private:
         sf::Texture tx_;  // holds pointer for texture

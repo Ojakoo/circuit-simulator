@@ -35,22 +35,39 @@ void Circuit::RemoveUnnecessaryNodes() {
 void Circuit::ConstructMatrices() {
     RemoveUnnecessaryNodes();
     //generate index map based on nodes
+    // works only on circuits with ac or dc sources only
     node_indexes_.clear();
     voltage_source_indexes_.clear();
-    int node_count = 0;
+    inductor_indexes_.clear();
+
+    int inductor_sc_count = 0;
+    int l = 0;  // inductor count
+    int m = 0; // voltage source count
+    int n = 0; // node count
     int voltage_sources_count = 0;
 
-    int omega = 0.0;  // DC circuit
+    float omega = omega_;
 
     for ( auto const& i : nodes_ ) {
         if ( i.second->GetType() != GROUND ) {
-            node_indexes_[ i.first ] = node_count;
-            node_count++;
+            node_indexes_[ i.first ] = n;
+            n++;
         }
     }
 
-    A_ = MatrixXcf::Zero(n_ + m_, n_ + m_);  // initialize A matrix
-    z_ = VectorXf::Zero(m_ + n_);  // initialize z vector
+    // count inductors and voltage sources
+    for ( auto it : components_ ) {
+        if ( it->GetType() == INDUCTOR && omega == 0) {
+            inductor_indexes_[it->GetName()] = l + n;
+            l += 1;
+        }
+        if ( it->GetType() == VOLTAGE_SOURCE ) {
+            m += 1;
+        }
+    }
+
+    A_ = MatrixXcf::Zero(n + m + l, n + m + l);  // initialize A matrix
+    z_ = VectorXf::Zero(m + n + l);  // initialize z vector
 
     for ( auto const& component : components_ ) {
 
@@ -66,7 +83,7 @@ void Circuit::ConstructMatrices() {
         std::string out_name = out->GetName();
         std::string in_name = in->GetName();
 
-        std::complex<float> admittance;
+        std::complex<float> admittance = std::complex<float>(0.0, 0.0);
 
         switch ( cls ) {
             case PASSIVE:
@@ -75,26 +92,29 @@ void Circuit::ConstructMatrices() {
                 */
                 switch ( type ) {
                     case RESISTOR:
-                        admittance = std::complex<float>(
-                            1 / component->GetValue(), 0
-                        );  // Y = 1 / Z = 1 / R
+                        if (component->GetValue() > 0.0) {
+                            admittance = std::complex<float>(
+                                1 / component->GetValue(), 0
+                            );  // Y = 1 / Z = 1 / R
+                        }
                         break;
                     case CAPACITOR:
-                        if (omega)
+                        if (omega != 0 && component->GetValue() > 0.0) {
                             admittance = std::complex<float>(
-                                0, component->GetValue() * omega
+                                0, (component->GetValue() * omega)
                             );  // Y = 1 / Z = j*w*C
+                        }
                         break;
                     case INDUCTOR:
-                        if (omega)
-                            admittance = std::complex<float>(
-                                0, 1 / (component->GetValue() * omega)
-                            );  // Y = 1 / Z = 1 / (j*w*L)
+                        if (omega != 0 && component->GetValue() > 0.0) {
+                           admittance = std::complex<float>(
+                                0, (- 1 / (component->GetValue() * omega))
+                            );  // Y = 1 / Z = -j / (w*L) 
+                        }
                         break;
                     default:
                         break;
                 }
-
                 if ( in->GetType() != GROUND && out->GetType() != GROUND ) {
                     // component is between two nodes
                     A_( node_indexes_[out_name], node_indexes_[in_name] ) += -admittance;
@@ -108,6 +128,19 @@ void Circuit::ConstructMatrices() {
                     // input terminal is connected to some node
                     A_( node_indexes_[in_name], node_indexes_[in_name] ) += admittance;
                 }
+
+                if ( type == INDUCTOR && omega == 0) {
+                    int idx = inductor_indexes_[name];
+                    if ( out->GetType() != GROUND ) {
+                        A_( node_indexes_[out_name], idx ) = -1;
+                        A_( idx, node_indexes_[out_name]) = -1;
+                    }
+                    if ( in->GetType() != GROUND ) {
+                        A_( node_indexes_[in_name], idx ) = 1;
+                        A_( idx, node_indexes_[in_name]) = 1;
+                    }
+                }
+
                 break;
             case ACTIVE:
                 /*
@@ -117,7 +150,7 @@ void Circuit::ConstructMatrices() {
                     case VOLTAGE_SOURCE:
                         if ( voltage_source_indexes_.find(name) == voltage_source_indexes_.end() ) {
                             //if voltage source is not mapped map it for future reference
-                            voltage_source_indexes_[name] = node_count + voltage_sources_count;
+                            voltage_source_indexes_[name] = n + l + voltage_sources_count;
                             voltage_sources_count++;
                         }
                         if ( out->GetType() != GROUND ) {
@@ -130,7 +163,7 @@ void Circuit::ConstructMatrices() {
                             A_(voltage_source_indexes_[name], node_indexes_[in_name]) = -1;  // append value to B submatrix
                             A_(node_indexes_[in_name], voltage_source_indexes_[name]) = -1;  // append value to C submatrix
                         }
-                        z_(voltage_source_indexes_[name]) = component->GetValue();
+                        z_(voltage_source_indexes_[name]) = component->GetValue();    
                         break;
                     case CURRENT_SOURCE:
                         if ( out->GetType() != GROUND ) {
@@ -138,7 +171,7 @@ void Circuit::ConstructMatrices() {
                         }
                         if ( in->GetType() != GROUND ) {
                             z_(node_indexes_[in_name]) += -component->GetValue();
-                        }
+                        }    
                         break;
                     default:
                         break;
@@ -148,42 +181,33 @@ void Circuit::ConstructMatrices() {
     }
 }
 
-const MatrixXcf Circuit::GetAMatrix() const {
-    return A_;
-}
-
-const VectorXf Circuit::GetZMatrix() const {
-    return z_;
-}
-
-const int Circuit::GetNodeCount() const {
-    // return number of real nodes in circuit (no ground node)
-    return n_;
-}
-
-const int Circuit::GetSourceCount() const {
-    return i_;
-}
-
-const int Circuit::GetVoltageSourceCount() const {
-    return m_;
-}
-
-const std::map<std::string, int> Circuit::GetNodeIndexes() const {
-    return node_indexes_;
-}
-
-const std::map<std::string, int> Circuit::GetVoltageSourceIndexes() const {
-    return voltage_source_indexes_;
-}
-
 const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
     auto it = nodes_.find(node_name);
     if (it == nodes_.end()) {
-        if (node_name != "0") n_++;
         nodes_[node_name] = std::make_shared<Node>(node_name, node_name == "0" ? GROUND : NORMAL);
     }
     return nodes_[node_name];
+}
+
+const std::shared_ptr<Node> Circuit::AddNode() {
+    // completely new node
+    std::set<std::string> node_names;
+    for ( auto pair : nodes_ ) {
+        node_names.insert(pair.first);
+    }
+    int j = 0;
+    while ( j < 99999 ) {
+        std::string s = "N" + std::to_string(j);
+        auto it = node_names.find(s);
+        if ( it == node_names.end() ) {
+            // not in nodes
+            auto n = std::make_shared<Node>(s);
+            nodes_[s] = n;
+            return n;
+        }
+        j++;
+    }
+    return nullptr;
 }
 
 void Circuit::RemoveNode(const std::string& node_name) {
@@ -191,15 +215,16 @@ void Circuit::RemoveNode(const std::string& node_name) {
 }
 
 void Circuit::AddComponent(std::shared_ptr<Component> component) {
-    ComponentType type = component->GetType();
-    if (type == VOLTAGE_SOURCE || type == CURRENT_SOURCE) {
-        i_++;
-        if (type == VOLTAGE_SOURCE) {
-            m_++;
+    components_.push_back(component);
+}
+
+bool Circuit::HasGround() {
+    for ( auto node : nodes_ ) {
+        if (node.second->GetType() == GROUND) {
+            return true;
         }
     }
-    
-    components_.push_back(component);
+    return false;
 }
 
 std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {

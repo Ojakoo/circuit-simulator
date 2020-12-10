@@ -11,7 +11,6 @@
 #include "voltage_source.hpp"
 #include "current_source.hpp"
 #include "node.hpp"
-#include "save_and_load.hpp"
 #include "Eigen/Dense"
 
 typedef std::complex<float> cd;
@@ -155,49 +154,67 @@ SCENARIO("Producing matrices") {
                 CHECK(z.isApprox(Refz));
                 CHECK(A.isApprox(RefA));
             }
-
-            std::cout << "z:\n" << z << "\n\n" << "A\n" << A << std::endl;
-            //std::cout << "node_indexes_:\n" << c.node_indexes_ << "\n\nvoltage_indexes_:\n" << c.source_indexes_ << std::endl;
         }
     }
 }
 
-SCENARIO("Producing matricies from circuit that is read from file") {
-    GIVEN("a good file to read") {
-        const std::string fname = "../../tests/netlists/netlist_good.txt";
+SCENARIO("Producing matrices from circuit with reactive elements") {
+    GIVEN("") {
 
-        WHEN("the the file  is read") {
+        Circuit c = Circuit();
 
-            Circuit c = LoadNetList(fname);
+        std::shared_ptr<Node> n1 = c.AddNode("N001");
+        std::shared_ptr<Node> n2 = c.AddNode("N002");
+        std::shared_ptr<Node> n3 = c.AddNode("N003");
+        std::shared_ptr<Node> g = c.AddNode("0");
 
+        std::shared_ptr<Resistor> r1 = std::make_shared<Resistor>("R2", 0.5, n1, n2);
+        std::shared_ptr<Resistor> r2 = std::make_shared<Resistor>("R1", 0.5, n3, g);
+        std::shared_ptr<Inductor> l1 = std::make_shared<Inductor>("L1", 0.001, n2, n3);
+        std::shared_ptr<Capacitor> c1 = std::make_shared<Capacitor>("C1", 0.005, n3, g);
+
+        std::shared_ptr<VoltageSource> s1 = std::make_shared<VoltageSource>("S1", 4, g, n1);
+        c.SetOmega( 314 );
+
+        c.AddComponent(r1);
+        c.AddComponent(r2);
+        c.AddComponent(l1);
+        c.AddComponent(c1);
+        c.AddComponent(s1);
+
+        Eigen::MatrixXcf RefA = MatrixXcf::Zero(4, 4);
+
+        RefA << cd(2,0), cd(-2,0), cd(0,0), cd(1,0),
+                cd(-2,0), cd(2,-1/(314*0.001)),  cd(0,1/(314*0.001)), cd(0,0),
+                cd(0,0), cd(0,1/(314*0.001)), cd(2,(314 * 0.005) - 1/(314*0.001) ), cd(0,0),
+                cd(1,0), cd(0,0), cd(0,0), cd(0,0);
+
+
+        Eigen::VectorXf Refz = MatrixXf::Zero(4, 1);
+
+        Refz << 0, 0, 0, 4;
+
+        WHEN("") {
             c.ConstructMatrices();
 
             MatrixXcf A = c.GetAMatrix();
             VectorXf z = c.GetZMatrix();
-    
-            THEN("There is 4 components in circuit") {
-                CHECK(c.GetComponents().size() == 4);
-            }
 
             THEN("Matricies are the right size") {
-                CHECK(A.rows() == 3);
-                CHECK(A.cols() == 3);
-                CHECK(z.rows() == 3);
+                CHECK(A.rows() == 4);
+                CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
                 CHECK(z.cols() == 1);
             }
 
-            THEN("Matricies are are built correctly") {
-                Matrix3cf m;
-                m << cd(0.1, 0), cd(-0.1, 0), cd(1.0, 0),
-                     cd(-0.1, 0), cd(0.1, 0), cd(0.0, 0),
-                     cd(1.0, 0), cd(0.0, 0), cd(0.0, 0);
-                Vector3f e(0, 0, 5);
-                CHECK(z.isApprox(e));
-                CHECK(A.isApprox(m));
+            THEN("Matrix is built right") {
+                CHECK(z.isApprox(Refz));
+                CHECK(A.isApprox(RefA));
             }
         }
     }
 }
+
 
 SCENARIO("Testing matrix construction when component is not connected") {
     GIVEN("A circuit with a voltage source and unconnected resistor") {
@@ -235,10 +252,143 @@ SCENARIO("Testing matrix construction when component is not connected") {
             THEN("Matricies are are built correctly") {
                 Matrix2cf m;
                 m << cd(0, 0), cd(1, 0),
-                     cd(1, 0),   cd(0 , 0);
-                Vector2f e(0, 6);
-                CHECK(z.isApprox(e));
+                     cd(1, 0),  cd(0, 0);
+                Vector2cf e;
+                e << cd(0,0), cd(6,0);
+                CHECK(e.isApprox(z));
                 CHECK(A.isApprox(m));
+            }
+        }
+    }
+}
+
+SCENARIO("Circuit with inductor") {
+    GIVEN("Circuit to construct matrix from") {
+
+        Circuit c = Circuit();
+        
+        auto n1 = c.AddNode("N001");
+        auto n2 = c.AddNode("N002");
+        auto g = c.AddNode("0");
+
+        auto v1 = std::make_shared<VoltageSource>("V1", 10, g, n1);
+        auto r1 = std::make_shared<Resistor>("R1", 5, n1, n2);
+        auto l1 = std::make_shared<Inductor>("L1", 2, n2, g);
+
+        c.AddComponent(v1);
+        c.AddComponent(r1);
+        c.AddComponent(l1);
+
+        WHEN("Matrices are constructed") {
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("A matrix and z vector sizes are correct") {
+                CHECK(A.rows() == 4);
+                CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
+                CHECK(z.cols() == 1);
+            }
+    
+            AND_THEN("A matrix is built correctly") {
+                Matrix4cf m;
+                m << cd(0.2, 0), cd(-0.2, 0), cd(0.0, 0), cd(1.0, 0.0),
+                     cd(-0.2, 0), cd(0.2, 0), cd(1.0, 0), cd(0.0, 0.0),
+                     cd(0, 0), cd(1.0, 0), cd(0.0, 0), cd(0.0, 0.0),
+                     cd(1.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0), cd(0.0, 0.0);
+                CHECK(A.isApprox(m));
+            }
+
+            AND_THEN("z vector is built correctly") {
+                Vector4f e(0, 0, 0, 10);
+                CHECK(z.isApprox(e));
+            }
+        }
+    }
+}
+
+SCENARIO("Circuit with inductors in series") {
+    GIVEN("Circuit to construct matrix from") {
+
+        Circuit c = Circuit();
+        
+        auto n1 = c.AddNode("N001");
+        auto n2 = c.AddNode("N002");
+        auto n3 = c.AddNode("N003");
+        auto g = c.AddNode("0");
+
+        auto v1 = std::make_shared<VoltageSource>("V1", 10, g, n1);
+        auto r1 = std::make_shared<Resistor>("R1", 5, n1, n2);
+        auto l1 = std::make_shared<Inductor>("L1", 2, n2, n3);
+        auto l2 = std::make_shared<Inductor>("L2", 10, n3, g);
+
+        c.AddComponent(v1);
+        c.AddComponent(r1);
+        c.AddComponent(l1);
+        c.AddComponent(l2);
+
+        WHEN("Matrices are constructed") {
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("A matrix and z vector sizes are correct") {
+                CHECK(A.rows() == 6);
+                CHECK(A.cols() == 6);
+                CHECK(z.rows() == 6);
+                CHECK(z.cols() == 1);
+            }
+
+            AND_THEN("Result is correct") {
+                VectorXf e(6, 1);
+                e << 10, 0, 0, 2, 2, -2;
+                CHECK((A.inverse() * z).isApprox(e));
+            }
+        }
+    }
+}
+
+SCENARIO("Circuit with inductors and capacitors") {
+    GIVEN("Circuit to construct matrix from") {
+
+        Circuit c = Circuit();
+
+        auto n1 = c.AddNode("N001");
+        auto n2 = c.AddNode("N002");
+        auto g = c.AddNode("0");
+
+        auto v1 = std::make_shared<VoltageSource>("V1", 10, g, n1);
+        auto r1 = std::make_shared<Resistor>("R1", 5, n1, n2);
+        auto c1 = std::make_shared<Capacitor>("C1", 2, n2, g);
+        auto l1 = std::make_shared<Inductor>("L1", 10, n2, g);
+        auto r2 = std::make_shared<Resistor>("R2", 20, n2, g);
+
+        c.AddComponent(v1);
+        c.AddComponent(r1);
+        c.AddComponent(c1);
+        c.AddComponent(l1);
+        c.AddComponent(r2);
+
+        WHEN("Matrices are constructed") {
+            c.ConstructMatrices();
+
+            MatrixXcf A = c.GetAMatrix();
+            VectorXf z = c.GetZMatrix();
+
+            THEN("A matrix and z vector sizes are correct") {
+                CHECK(A.rows() == 4);
+                CHECK(A.cols() == 4);
+                CHECK(z.rows() == 4);
+                CHECK(z.cols() == 1);
+            }
+
+            AND_THEN("Result is correct") {
+                VectorXf e(4, 1);
+                e << 10, 0, 2, -2;
+                CHECK((A.inverse() * z).isApprox(e));
             }
         }
     }

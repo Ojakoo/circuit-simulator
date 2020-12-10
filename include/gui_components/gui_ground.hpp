@@ -17,4 +17,5 @@ class GUIGround : public sf::RectangleShape {
     private:
         sf::VertexArray lines;
         std::shared_ptr<Node> node_ = nullptr;
+        sf::RectangleShape conn_;
 };

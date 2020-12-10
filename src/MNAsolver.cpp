@@ -3,10 +3,20 @@
 
 MNAsolver::MNAsolver(){}
 
-void MNAsolver::solveSteady(const MatrixXcf& A, const VectorXcf& z, std::map<std::string, int> node_indexes, std::map<std::string, int> voltage_source_indexes) {
+void MNAsolver::solveSteady(
+        const MatrixXcf& A, 
+        const VectorXcf& z,
+        float omega, 
+        std::map<std::string, int> node_indexes, 
+        std::map<std::string, int> voltage_source_indexes, 
+        std::map<std::string, int> inductor_indexes 
+    ) {
+
     x_ = A.inverse()*z;
+
     node_voltages_.clear();
     voltage_source_currents_.clear();
+    passive_component_currents_.clear();
 
     for ( auto const& i : node_indexes ) {
         node_voltages_[ i.first ] = x_( i.second );
@@ -14,116 +24,148 @@ void MNAsolver::solveSteady(const MatrixXcf& A, const VectorXcf& z, std::map<std
     for ( auto const& i : voltage_source_indexes ) {
         voltage_source_currents_[ i.first ] = x_( i.second );
     }
-}
-
-const VectorXcf MNAsolver::GetxVector() const {
-    return x_;
-}
-
-const std::map<std::string, cd> MNAsolver::GetNodeVoltages() const {
-    return node_voltages_;
-}
-
-const std::map<std::string, cd> MNAsolver::GetVoltageSourceCurrents() const {
-    return voltage_source_currents_;
+    for ( auto const& i : inductor_indexes ) {
+        std::cout << i.first << " " << i.second << std::endl;
+        passive_component_currents_[ i.first ] = x_( i.second );
+    }
 }
 
 std::ostream &operator<<(std::ostream& out, const MNAsolver& solver) {
-    out << "\nnode voltages";
+    out << "\n\nnode voltages";
     for ( auto it : solver.GetNodeVoltages() ) {
         out << "\n" << it.first << " " << it.second;
     }
-    out << "\nvoltage source currents";
+    out << "\n\nvoltage source currents";
     for ( auto it : solver.GetVoltageSourceCurrents() ) {
         out << "\n" << it.first << " " << it.second;
     }
     return out.flush();
 }
 
-
-void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components){
+void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> components, float omega ) {
     // int omega = 0.0; //for ac circuit
-    passive_component_currents_.clear();
 
-    for ( auto const& component : components ){
-        std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
-        std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
+    std::map<std::pair<std::string, std::string>,std::list<std::shared_ptr<Component>>> parallel_components_map;
 
-        ComponentType type = component->GetType();
-        ComponentClass cls = component->GetClass();
-        std::string comp_name = component->GetName();
+    for ( auto const& component : components ) {
+        std::string out = component->GetTerminalNode(OUTPUT)->GetName();
+        std::string in = component->GetTerminalNode(INPUT)->GetName();
 
-        std::string out_name = out->GetName();
-        std::string in_name = in->GetName();
+        auto found = parallel_components_map.find(std::make_pair(out, in));
 
-        std::complex<float> out_value = node_voltages_[out_name];
-        std::complex<float> in_value = node_voltages_[in_name];
+        if ( found == parallel_components_map.end() ) {
+            auto found2 = parallel_components_map.find(std::make_pair(in, out));
 
-        std::complex<float> V_difference = in_value - out_value;
+            if ( found == parallel_components_map.end() ) {
+                parallel_components_map[std::make_pair(out, in)] = {component};
+            } else {
+                (*found2).second.push_back(component);
+            }
+        } else {
+            (*found).second.push_back(component);
+        }
+    }
 
-        std::complex<float> admittance;
-        std::complex<float> current;
+    for ( auto const& obj : parallel_components_map ) {
+        cd total_admittance = (0,0);
+        bool short_circuit = false;
 
-        switch ( cls ) {
-            case PASSIVE:
-                /*
-                Calculating currents only for passive components
-                */
+        std::cout << "calculate total admittance l73\n";
+        //calculate total admittance
+        for ( auto const& component : obj.second ) {
+            ComponentType type = component->GetType();
+
+            switch ( type ) {
+                case RESISTOR:
+                    std::cout << "type:" << type << " name:" << component->GetName() << " value:" << component->GetValue() << " l80\n";
+                    total_admittance += cd(1 / component->GetValue(), 0);  
+                    // Y = 1 / Z = 1 / R
+                    break;
+                case CAPACITOR:
+                    if (omega != 0) {
+                        total_admittance += cd(0, (component->GetValue() * omega));  
+                        // Y = 1 / Z = j*w*C
+                    }
+                    break;
+                case INDUCTOR:
+                    if (omega != 0) {
+                        total_admittance += cd(0, (- 1 / (component->GetValue() * omega)));  
+                        // Y = 1 / Z = -j / (w*L) 
+                        break;
+                    } else {
+                        short_circuit = true;
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        //
+        for ( auto const& component : obj.second ) {
+            ComponentType type = component->GetType();
+            std::string name = component->GetName();
+
+            cd out_value = (0,0); 
+            cd in_value = (0,0); 
+
+            if (component->GetTerminalNode(OUTPUT)->GetType() != GROUND) {
+                out_value = node_voltages_[component->GetTerminalNode(OUTPUT)->GetName()];
+            }
+            if (component->GetTerminalNode(INPUT)->GetType() != GROUND) {
+                in_value = node_voltages_[component->GetTerminalNode(INPUT)->GetName()];
+            }
+            cd V_difference = in_value - out_value;
+
+            std::cout << name << " short: " << short_circuit << " V_dif:" << V_difference << " total admittance:" << total_admittance << " l120\n"; 
+
+            if ( omega == 0 ) {
+                // if short circuit then other than inductor I = 0   
+                if ( short_circuit ) {
+                    switch ( type ) {
+                        case RESISTOR:
+                        case CAPACITOR:
+                            passive_component_currents_[name] = (0,0);
+                            break;
+                        case INDUCTOR:
+                            // DC inductor current is handled in mna
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    switch ( type ) {
+                        case RESISTOR:
+                            passive_component_currents_[name] = ( cd(1 / component->GetValue(), 0) / (total_admittance) ) * V_difference * total_admittance;
+                            break;
+                        case CAPACITOR:
+                            passive_component_currents_[name] = (0,0);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } else {
+                // shorts currently only in DC 
                 switch ( type ) {
                     case RESISTOR:
-                        admittance = std::complex<float>(
-                            1 / component->GetValue(), 0
-                        );  // Y = 1 / Z = 1 / R
-                        current = V_difference * admittance;
-                        passive_component_currents_[ comp_name] = current;
+                        passive_component_currents_[name] = ( cd(1 / component->GetValue(), 0) / (total_admittance)) * V_difference * total_admittance; 
                         break;
                     case CAPACITOR:
-                    //if we apply ac sources
-                     /*   if (omega){
-                            admittance = std::complex<float>(
-                                0, component->GetValue() * omega
-                            );  // Y = 1 / Z = j*w*C
-                            current = V_difference * admittance;
-                        }
-                        */
-                        passive_component_currents_[ comp_name] = std::complex<float>(0,0);
+                        passive_component_currents_[name] = ( cd(0, (component->GetValue() * omega)) / (total_admittance)) * V_difference * total_admittance;
                         break;
-                        /*
                     case INDUCTOR:
-                    //if we apply ac sources
-                        if (omega){
-                            admittance = std::complex<float>(
-                                0, 1 / (component->GetValue() * omega)
-                            );  // Y = 1 / Z = 1 / (j*w*L)
-                            current = V_difference * admittance;
-                        }
-                        passive_component_currents_[ comp_name] = std::complex<float>(0,0);
+                        passive_component_currents_[name] = ( cd(0, - 1 / (component->GetValue() * omega)) / (total_admittance)) * V_difference * total_admittance;
                         break;
-                        */
                     default:
                         break;
                 }
-                 
-                
-                
-                break;
-            case ACTIVE: //do nothing
-            /*
-                switch ( type ) {
-                    case DC_VOLTAGE_SOURCE:
-                        break;
-                    case DC_CURRENT_SOURCE:
-                        break;
-                    default:
-                        break;
-                } 
-            */
-                break;
+            }
         }
     }
 }
 
-std::ostream & MNAsolver::resultListed(std::ostream &out){
+std::ostream& MNAsolver::resultListed(std::ostream &out) {
     out << " Result: " << std::endl;
 
     for(auto const& pair: node_voltages_){

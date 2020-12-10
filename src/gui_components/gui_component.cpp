@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include "SFML/Graphics/Text.hpp"
 #include "SFML/Graphics/RectangleShape.hpp"
@@ -58,9 +60,35 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     if (font.loadFromFile("../fonts/arial.ttf"))
     {
         sf::Text name(GetName(), font, 14);
-        sf::Text value(std::to_string(GetValue()), font, 14);
+        std::string unit;
+        switch (GetType()) {
+            case RESISTOR:
+                unit = " OHM";
+                break;
+            case CAPACITOR:
+                unit = " F";
+                break;
+            case INDUCTOR:
+                unit = " H";
+                break;
+            case VOLTAGE_SOURCE:
+                unit = " V";
+                break;
+            case CURRENT_SOURCE:
+                unit = " A";
+                break;
+        }
+        int precision = 1;
+        if (GetValue() != 0.0 && GetValue() < 0.00001) {
+            precision = 9;
+        } else if (GetValue() != 0.0 && GetValue() < 0.1) {
+            precision = 5;
+        }
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(precision) << GetValue();
+        sf::Text value(stream.str() + unit, font, 14);
         name.setFillColor(sf::Color::Black);
-        value.setFillColor(sf::Color::Black);
+        value.setFillColor(sf::Color::Yellow);
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
         if ( rot == 90.f || rot == 270.f) {
@@ -76,6 +104,8 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
     if (component_->GetTerminalNode(INPUT)) {
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
+        sf::Text in(GetTerminalNode(INPUT)->GetName(), font, 14);
+        in.setFillColor(sf::Color::Blue);
         if (rot == 0)
             input_rect_.setPosition(bounds.left, bounds.top + bounds.height/2);
         else if (rot == 90)
@@ -85,10 +115,14 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
         else
             input_rect_.setPosition(bounds.left + bounds.width/2, bounds.top + bounds.height);
         window.draw(input_rect_);
+        in.setPosition(input_rect_.getPosition());
+        window.draw(in);
     }
     if (component_->GetTerminalNode(OUTPUT)) {
         auto rot = getRotation();
         auto bounds = getGlobalBounds();
+        sf::Text out(GetTerminalNode(OUTPUT)->GetName(), font, 14);
+        out.setFillColor(sf::Color::Blue);
         if (rot == 0)
             output_rect_.setPosition(bounds.left + bounds.width, bounds.top + bounds.height/2);
         else if (rot == 90)
@@ -98,18 +132,8 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
         else
             output_rect_.setPosition(bounds.left + bounds.width/2, bounds.top);
         window.draw(output_rect_);
-    }
-}
-
-
-void GUIComponent::SetTerminalRects(TerminalType terminal, sf::Vector2f coords) {
-    switch ( terminal ) {
-        case INPUT:
-            input_rect_.setPosition(coords);
-            break;
-        case OUTPUT:
-            output_rect_.setPosition(coords);
-            break;
+        out.setPosition(output_rect_.getPosition());
+        window.draw(out);
     }
 }
 
@@ -125,16 +149,11 @@ void GUIComponent::ConnectWire(TerminalType terminal) {
     connected_wires_[terminal] += 1;
 }
 
-void GUIComponent::RemoveWire(TerminalType terminal, Circuit &circuit) {
+void GUIComponent::RemoveWire(TerminalType terminal) {
     connected_wires_[terminal] -= 1;
     if (connected_wires_[terminal] <= 0) {
         // disconnect
-        //circuit.RemoveNode(component_->GetTerminalNode(terminal)->GetName());
         ConnectNodeToTerminal(terminal, nullptr);
         connected_wires_[terminal] = 0;
     }
-}
-
-const int GUIComponent::GetWireCount(TerminalType terminal) {
-    return connected_wires_[terminal];
 }

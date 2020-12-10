@@ -21,6 +21,11 @@ use as follows:
 You may also add other new directories as needed, for example
 for testing tools.
 !--->
+
+# Circuit Simulator
+
+![preview](images/preview.png)
+
 Dependencies:
 
 ```
