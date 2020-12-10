@@ -48,16 +48,21 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
     std::map<std::pair<std::string, std::string>,std::list<std::shared_ptr<Component>>> parallel_components_map;
 
     for ( auto const& component : components ) {
-        std::string out = component->GetTerminalNode(OUTPUT)->GetName();
-        std::string in = component->GetTerminalNode(INPUT)->GetName();
+        std::shared_ptr<Node> out = component->GetTerminalNode(OUTPUT);
+        std::shared_ptr<Node> in = component->GetTerminalNode(INPUT);
 
-        auto found = parallel_components_map.find(std::make_pair(out, in));
+        if (out == nullptr || in == nullptr) continue;  // other node is not connected
+
+        std::string out_name = component->GetTerminalNode(OUTPUT)->GetName();
+        std::string in_name = component->GetTerminalNode(INPUT)->GetName();
+
+        auto found = parallel_components_map.find(std::make_pair(out_name, in_name));
 
         if ( found == parallel_components_map.end() ) {
-            auto found2 = parallel_components_map.find(std::make_pair(in, out));
+            auto found2 = parallel_components_map.find(std::make_pair(in_name, out_name));
 
             if ( found == parallel_components_map.end() ) {
-                parallel_components_map[std::make_pair(out, in)] = {component};
+                parallel_components_map[std::make_pair(out_name, in_name)] = {component};
             } else {
                 (*found2).second.push_back(component);
             }
