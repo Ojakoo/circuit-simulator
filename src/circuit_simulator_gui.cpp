@@ -549,7 +549,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         } else {
                             // check if we clicked on wire
                             auto it = WireClick(mouse);
-                            if (it != wires_.end()) {
+                            if (it != wires_.end() && (*it) != addingWire_) {
                                 if ((addingWire_->GetNode() && (*it)->GetNode()) ||
                                     !addingWire_->GetNode() && (*it)->GetNode()) {
                                     // both adding wire and the clicked wire has a node
@@ -559,6 +559,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     // addingwire has a node but the clicked wire doesn't
                                     (*it)->SetNode(addingWire_->GetNode());
                                 }
+                                addingWire_->SetConnPoint((*addingWire_)[count - 1].position);
                             }
                         }
                         if (!skip) {
@@ -820,9 +821,13 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 
                 circuit_.SetOmega(0.0);
                 circuit_.RemoveUnnecessaryNodes();
-                std::cout << circuit_ << std::endl;
-                for (auto it: circuit_.GetNodes()) {
-                    std::cout << *(it.second) << std::endl;
+                if (circuit_.HasGround()) {
+                    std::cout << circuit_ << std::endl;
+                    for (auto it: circuit_.GetNodes()) {
+                        std::cout << *(it.second) << std::endl;
+                    }
+                } else {
+                    std::cout << "Add ground before simulating!" << std::endl;
                 }
                 /*
                 circuit_.ConstructMatrices();
@@ -958,6 +963,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw wires
     for (auto it : wires_) {
         draw(*it);
+        it->DrawConns(*this);
     }
 
     // draw ground

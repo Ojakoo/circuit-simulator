@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 #include "SFML/Graphics/Text.hpp"
 
 #include "gui_components/gui_component.hpp"
@@ -27,8 +28,12 @@ class GUIWire : public sf::VertexArray {
 
         std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GetComponents();
 
+        void SetConnPoint(sf::Vector2f point);
+
+        void DrawConns(sf::RenderWindow &window);
+
     private:
         std::shared_ptr<Node> node_ = nullptr;
         std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> components_;
-
+        std::list<sf::RectangleShape> wire_conns_;
 };

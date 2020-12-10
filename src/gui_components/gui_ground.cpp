@@ -30,11 +30,17 @@ void GUIGround::draw(sf::RenderWindow &window) {
     lines[6].position = sf::Vector2f(bounds.left + 15, bounds.top + 40);
     lines[7].position = sf::Vector2f(bounds.left + 25, bounds.top + 40);
     window.draw(lines);
+    if (node_) window.draw(conn_);
 }
 
 void GUIGround::SetNode(std::shared_ptr<Node> node) {
     node_ = node;
     node_->SetNodeType(GROUND);
+    auto bnds = getGlobalBounds();
+    conn_.setPosition(bnds.left + bnds.width/2, bnds.top);
+    conn_.setOrigin(5, 5);
+    conn_.setSize(sf::Vector2f(9, 9));
+    conn_.setFillColor(sf::Color::Black);
 }
 
 std::shared_ptr<Node> GUIGround::GetNode() {
