@@ -156,7 +156,7 @@ void CircuitSimulatorGUI::LoadCircuit(std::string &file) {
         throw std::runtime_error("Failed to read netlist file.");
     }
 
-    std::set<std::string> c = {"R", "L", "C", "V"};
+    std::set<std::string> c = {"R", "L", "C", "V", "J"};
 
     std::map<std::string, std::shared_ptr<GUIComponent>> comp_map;
 
@@ -283,6 +283,8 @@ void CircuitSimulatorGUI::SaveCircuit(std::string &file) {
             case VOLTAGE_SOURCE:
                 save_file << "V ";
                 break;
+            case CURRENT_SOURCE:
+                save_file << "J ";
             default:
                 break;
         }
