@@ -58,10 +58,20 @@ void Circuit::ConstructMatrices() {
     // count inductors and voltage sources
     for ( auto it : components_ ) {
         if ( it->GetType() == INDUCTOR && omega == 0) {
+            std::shared_ptr<Node> out = it->GetTerminalNode(OUTPUT);
+            std::shared_ptr<Node> in = it->GetTerminalNode(INPUT);
+
+            if (out == nullptr || in == nullptr) continue;  // other node is not connected
+
             inductor_indexes_[it->GetName()] = l + n;
             l += 1;
         }
         if ( it->GetType() == VOLTAGE_SOURCE ) {
+            std::shared_ptr<Node> out = it->GetTerminalNode(OUTPUT);
+            std::shared_ptr<Node> in = it->GetTerminalNode(INPUT);
+
+            if (out == nullptr || in == nullptr) continue;  // other node is not connected
+
             m += 1;
         }
     }
