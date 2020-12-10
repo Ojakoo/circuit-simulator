@@ -70,14 +70,12 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
         cd total_admittance = (0,0);
         bool short_circuit = false;
 
-        std::cout << "calculate total admittance l73\n";
-        //calculate total admittance
+       //calculate total admittance
         for ( auto const& component : obj.second ) {
             ComponentType type = component->GetType();
 
             switch ( type ) {
                 case RESISTOR:
-                    std::cout << "type:" << type << " name:" << component->GetName() << " value:" << component->GetValue() << " l80\n";
                     total_admittance += cd(1 / component->GetValue(), 0);  
                     // Y = 1 / Z = 1 / R
                     break;
@@ -116,8 +114,6 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                 in_value = node_voltages_[component->GetTerminalNode(INPUT)->GetName()];
             }
             cd V_difference = in_value - out_value;
-
-            std::cout << name << " short: " << short_circuit << " V_dif:" << V_difference << " total admittance:" << total_admittance << " l120\n"; 
 
             if ( omega == 0 ) {
                 // if short circuit then other than inductor I = 0   
