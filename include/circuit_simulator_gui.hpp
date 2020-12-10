@@ -11,8 +11,6 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "save_and_load.hpp"
-
 #include "gui_components/gui_resistor.hpp"
 #include "gui_components/gui_capacitor.hpp"
 #include "gui_components/gui_inductor.hpp"

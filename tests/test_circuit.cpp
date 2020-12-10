@@ -11,7 +11,6 @@
 #include "voltage_source.hpp"
 #include "current_source.hpp"
 #include "node.hpp"
-#include "save_and_load.hpp"
 #include "Eigen/Dense"
 
 typedef std::complex<float> cd;
@@ -216,43 +215,6 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
     }
 }
 
-SCENARIO("Producing matricies from circuit that is read from file") {
-    GIVEN("a good file to read") {
-        const std::string fname = "../../tests/netlists/netlist_good.txt";
-
-        WHEN("the the file  is read") {
-
-            Circuit c = LoadNetList(fname);
-
-            c.ConstructMatrices();
-
-            Eigen::MatrixXcf A = c.GetAMatrix();
-            Eigen::VectorXf z = c.GetZMatrix();
-    
-            THEN("There is 4 components in circuit") {
-                CHECK(c.GetComponents().size() == 4);
-            }
-            
-            THEN("Matricies are the right size") {
-                CHECK(A.rows() == 4);
-                CHECK(A.cols() == 4);
-                CHECK(z.rows() == 4);
-                CHECK(z.cols() == 1);
-            }
-            
-            THEN("Matricies are are built correctly") {
-                Matrix4cf m;
-                m << cd(0.1, 0), cd(-0.1, 0), cd(0.0, 0), cd(1.0, 0),
-                    cd(-0.1, 0), cd(0.1, 0), cd(-1.0, 0), cd(0, 0),
-                    cd(0.0, 0), cd(-1.0, 0), cd(0.0, 0), cd(0.0, 0),
-                    cd(1.0, 0), cd(0, 0), cd(0.0, 0), cd(0.0, 0);
-                Vector4f e(0, 0, 0, 5);
-                CHECK(z.isApprox(e));
-                CHECK(A.isApprox(m));
-            }
-        }
-    }
-}
 
 SCENARIO("Testing matrix construction when component is not connected") {
     GIVEN("A circuit with a voltage source and unconnected resistor") {
