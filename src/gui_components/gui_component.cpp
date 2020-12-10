@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include "SFML/Graphics/Text.hpp"
 #include "SFML/Graphics/RectangleShape.hpp"
@@ -76,7 +78,15 @@ void GUIComponent::DrawInfo(sf::RenderWindow &window) {
                 unit = " A";
                 break;
         }
-        sf::Text value(std::to_string(GetValue()) + unit, font, 14);
+        int precision = 1;
+        if (GetValue() != 0.0 && GetValue() < 0.00001) {
+            precision = 9;
+        } else if (GetValue() != 0.0 && GetValue() < 0.1) {
+            precision = 5;
+        }
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(precision) << GetValue();
+        sf::Text value(stream.str() + unit, font, 14);
         name.setFillColor(sf::Color::Black);
         value.setFillColor(sf::Color::Yellow);
         auto rot = getRotation();

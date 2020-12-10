@@ -44,3 +44,18 @@ void GUIWire::ConnectComponent(std::shared_ptr<GUIComponent> comp, TerminalType 
 std::map<TerminalType, std::vector<std::shared_ptr<GUIComponent>>> GUIWire::GetComponents() {
     return components_;
 }
+
+void GUIWire::SetConnPoint(sf::Vector2i point) {
+    sf::RectangleShape c;
+    c.setPosition(point.x, point.y);
+    c.setOrigin(5, 5);
+    c.setSize(sf::Vector2f(9, 9));
+    c.setFillColor(sf::Color::Black);
+    wire_conns_.push_back(c);
+}
+
+void GUIWire::DrawConns(sf::RenderWindow &window) {
+    for ( auto conn : wire_conns_ ) {
+        window.draw(conn);
+    }
+}

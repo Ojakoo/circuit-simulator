@@ -549,7 +549,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                         } else {
                             // check if we clicked on wire
                             auto it = WireClick(mouse);
-                            if (it != wires_.end()) {
+                            if (it != wires_.end() && (*it) != addingWire_) {
                                 if ((addingWire_->GetNode() && (*it)->GetNode()) ||
                                     !addingWire_->GetNode() && (*it)->GetNode()) {
                                     // both adding wire and the clicked wire has a node
@@ -559,6 +559,8 @@ void CircuitSimulatorGUI::ProcessEvents() {
                                     // addingwire has a node but the clicked wire doesn't
                                     (*it)->SetNode(addingWire_->GetNode());
                                 }
+                                auto closest = MapCoordsToClosest(sf::Vector2i(mouse.x, mouse.y));
+                                addingWire_->SetConnPoint(closest);
                             }
                         }
                         if (!skip) {
@@ -958,6 +960,7 @@ void CircuitSimulatorGUI::DrawComponents() {
     // draw wires
     for (auto it : wires_) {
         draw(*it);
+        it->DrawConns(*this);
     }
 
     // draw ground
