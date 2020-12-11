@@ -827,20 +827,24 @@ void CircuitSimulatorGUI::RenderMenuBar() {
                 circuit_.RemoveUnnecessaryNodes();
                 if (circuit_.HasGround()) {
                     circuit_.ConstructMatrices();
-                    auto solver = MNAsolver();
-                    solver.solveSteady(
-                        circuit_.GetAMatrix(),
-                        circuit_.GetZMatrix(),
-                        circuit_.GetOmega(),
-                        circuit_.GetNodeIndexes(),
-                        circuit_.GetVoltageSourceIndexes(),
-                        circuit_.GetInductorIndexes()
-                    );
-                    solver.setCurrents(
-                        circuit_.GetComponents(),
-                        circuit_.GetOmega()
-                    );
-                    solver.resultListed(std::cout);
+                    if (circuit_.Solveable()) {
+                        auto solver = MNAsolver();
+                        solver.solveSteady(
+                            circuit_.GetAMatrix(),
+                            circuit_.GetZMatrix(),
+                            circuit_.GetOmega(),
+                            circuit_.GetNodeIndexes(),
+                            circuit_.GetVoltageSourceIndexes(),
+                            circuit_.GetInductorIndexes()
+                        );
+                        solver.setCurrents(
+                            circuit_.GetComponents(),
+                            circuit_.GetOmega()
+                        );
+                        solver.resultListed(std::cout);
+                    } else {
+                        std::cout << "Failed to solve circuit." << std::endl;
+                    }
                 } else {
                     std::cout << "Add ground before simulating!" << std::endl;
                 }
@@ -901,20 +905,24 @@ void CircuitSimulatorGUI::RenderMenuBar() {
             circuit_.RemoveUnnecessaryNodes();
             if (circuit_.HasGround()) {
                 circuit_.ConstructMatrices();
-                auto solver = MNAsolver();
-                solver.solveSteady(
-                    circuit_.GetAMatrix(),
-                    circuit_.GetZMatrix(),
-                    circuit_.GetOmega(),
-                    circuit_.GetNodeIndexes(),
-                    circuit_.GetVoltageSourceIndexes(),
-                    circuit_.GetInductorIndexes()
-                );
-                solver.setCurrents(
-                    circuit_.GetComponents(),
-                    circuit_.GetOmega()
-                );
-                solver.resultListed(std::cout);
+                if (circuit_.Solveable()) {
+                    auto solver = MNAsolver();
+                    solver.solveSteady(
+                        circuit_.GetAMatrix(),
+                        circuit_.GetZMatrix(),
+                        circuit_.GetOmega(),
+                        circuit_.GetNodeIndexes(),
+                        circuit_.GetVoltageSourceIndexes(),
+                        circuit_.GetInductorIndexes()
+                    );
+                    solver.setCurrents(
+                        circuit_.GetComponents(),
+                        circuit_.GetOmega()
+                    );
+                    solver.resultListed(std::cout);
+                } else {
+                    std::cout << "Failed to solve circuit." << std::endl;
+                }
             } else {
                 std::cout << "Add ground before simulating!" << std::endl;
             }

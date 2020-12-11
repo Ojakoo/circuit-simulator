@@ -57,21 +57,13 @@ void Circuit::ConstructMatrices() {
 
     // count inductors and voltage sources
     for ( auto it : components_ ) {
+        if ( !it->GetTerminalNode(OUTPUT) || !it->GetTerminalNode(INPUT) ) continue;
+        
         if ( it->GetType() == INDUCTOR && omega == 0) {
-            std::shared_ptr<Node> out = it->GetTerminalNode(OUTPUT);
-            std::shared_ptr<Node> in = it->GetTerminalNode(INPUT);
-
-            if (out == nullptr || in == nullptr) continue;  // other node is not connected
-
             inductor_indexes_[it->GetName()] = l + n;
             l += 1;
         }
         if ( it->GetType() == VOLTAGE_SOURCE ) {
-            std::shared_ptr<Node> out = it->GetTerminalNode(OUTPUT);
-            std::shared_ptr<Node> in = it->GetTerminalNode(INPUT);
-
-            if (out == nullptr || in == nullptr) continue;  // other node is not connected
-
             m += 1;
         }
     }
@@ -192,6 +184,7 @@ void Circuit::ConstructMatrices() {
 }
 
 const std::shared_ptr<Node> Circuit::AddNode(const std::string& node_name) {
+    if (node_name == "-") return nullptr;
     auto it = nodes_.find(node_name);
     if (it == nodes_.end()) {
         nodes_[node_name] = std::make_shared<Node>(node_name, node_name == "0" ? GROUND : NORMAL);
@@ -235,6 +228,13 @@ bool Circuit::HasGround() {
         }
     }
     return false;
+}
+
+bool Circuit::Solveable() const {
+    if (A_.rows() == 0 || A_.cols() == 0 || z_.cols() == 0 || z_.rows() == 0) {
+        return false;
+    }
+    return true;
 }
 
 std::ostream &operator<<(std::ostream& out, const Circuit& circuit) {

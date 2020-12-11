@@ -72,7 +72,7 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
     }
 
     for ( auto const& obj : parallel_components_map ) {
-        cd total_admittance = (0,0);
+        cd total_admittance = cd(0,0);
         bool short_circuit = false;
 
        //calculate total admittance
@@ -109,8 +109,8 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
             ComponentType type = component->GetType();
             std::string name = component->GetName();
 
-            cd out_value = (0,0); 
-            cd in_value = (0,0); 
+            cd out_value = cd(0,0); 
+            cd in_value = cd(0,0); 
 
             if (component->GetTerminalNode(OUTPUT)->GetType() != GROUND) {
                 out_value = node_voltages_[component->GetTerminalNode(OUTPUT)->GetName()];
@@ -126,7 +126,7 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                     switch ( type ) {
                         case RESISTOR:
                         case CAPACITOR:
-                            passive_component_currents_[name] = (0,0);
+                            passive_component_currents_[name] = cd(0,0);
                             break;
                         case INDUCTOR:
                             // DC inductor current is handled in mna
@@ -140,7 +140,7 @@ void MNAsolver::setCurrents( const std::list<std::shared_ptr<Component>> compone
                             passive_component_currents_[name] = ( cd(1 / component->GetValue(), 0) / (total_admittance) ) * V_difference * total_admittance;
                             break;
                         case CAPACITOR:
-                            passive_component_currents_[name] = (0,0);
+                            passive_component_currents_[name] = cd(0,0);
                             break;
                         default:
                             break;
