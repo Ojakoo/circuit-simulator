@@ -22,55 +22,15 @@ You may also add other new directories as needed, for example
 for testing tools.
 !--->
 
-# Circuit Simulator
+# Circuit Simulator (C++ programming project)
 
 ![preview](images/preview.png)
 
-Dependencies:
+### Course: ELEC-A7151 - Object oriented programming with C++
+### Group : circuit-sim-2020-2
 
-```
-cd circuit-sim-2020-2
-git submodule update --init --recursive
-```
+## Project Description
 
-How to run:
+Circuit simulator program that can calculate steady state analysis for DC and AC. You can add, rotate, move, connect and remove components and wires. You can also move and zoom the view and build an electronic circuit from various components and sources by connecting them with wires. After you have constructed a circuit you can solve the circuits node voltages and component currents. The program uses MNA (Modified Nodal Analysis) when solving the voltages and currents in the circuit. When calculating the currents and voltages with steady state DC analysis, inductors will appear as short circuits and capacitors will appear as open circuits for the solver.
 
-```
-cd circuit-sim-2020-2
-mkdir build
-cd build
-cmake ..
-make
-./src/main
-```
-
-How to run tests:
-
-```
-cd circuit-sim-2020-2
-mkdir build
-cd build
-cmake ..
-make
-make test
-```
-
-How to run individual test for more accurate details:
-
-```
-cd circuit-sim-2020-2
-mkdir build
-cd build
-cmake ..
-make
-cd tests
-./circuit
-./load_file
-./save_file
-```
-
-Remove everything from build folder:
-
-```
-rm -r *
-```
+Instructions on how to build and run the program can be found in /doc folder.
