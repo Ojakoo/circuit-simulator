@@ -192,7 +192,7 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
 
         Eigen::VectorXf Refz = MatrixXf::Zero(4, 1);
 
-        Refz << 0, 0, 0, 4;
+        Refz << 0, 0, 0, 4*0.7071;
 
         WHEN("") {
             c.ConstructMatrices();

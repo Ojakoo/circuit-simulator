@@ -165,15 +165,30 @@ void Circuit::ConstructMatrices() {
                             A_(voltage_source_indexes_[name], node_indexes_[in_name]) = -1;  // append value to B submatrix
                             A_(node_indexes_[in_name], voltage_source_indexes_[name]) = -1;  // append value to C submatrix
                         }
-                        z_(voltage_source_indexes_[name]) = component->GetValue();    
+                        if ( omega == 0 ) {
+                            z_(voltage_source_indexes_[name]) = component->GetValue();    
+                            break;
+                        } else {
+                            z_(voltage_source_indexes_[name]) = component->GetValue() * 0.70710678118;
+                            break;
+                        }
                         break;
                     case CURRENT_SOURCE:
-                        if ( out->GetType() != GROUND ) {
-                            z_(node_indexes_[out_name]) += component->GetValue();
-                        }
-                        if ( in->GetType() != GROUND ) {
-                            z_(node_indexes_[in_name]) += -component->GetValue();
-                        }    
+                        if ( omega == 0 ) {
+                            if ( out->GetType() != GROUND ) {
+                                z_(node_indexes_[out_name]) += component->GetValue();
+                            }
+                            if ( in->GetType() != GROUND ) {
+                                z_(node_indexes_[in_name]) += -component->GetValue();
+                            } 
+                        } else {
+                            if ( out->GetType() != GROUND ) {
+                                z_(node_indexes_[out_name]) += component->GetValue() * 0.70710678118;
+                            }
+                            if ( in->GetType() != GROUND ) {
+                                z_(node_indexes_[in_name]) += -component->GetValue() * 0.70710678118;
+                            } 
+                        }   
                         break;
                     default:
                         break;

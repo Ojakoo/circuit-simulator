@@ -25,7 +25,6 @@ void MNAsolver::solveSteady(
         voltage_source_currents_[ i.first ] = x_( i.second );
     }
     for ( auto const& i : inductor_indexes ) {
-        std::cout << i.first << " " << i.second << std::endl;
         passive_component_currents_[ i.first ] = x_( i.second );
     }
 }

@@ -193,20 +193,20 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
 
             solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
 
-            Eigen::VectorXcf Refx = MatrixXf::Zero(4, 1);
-            Refx << cd(12,0), cd(8.55495,-5.42883), cd(8.64023,-5.48295), cd(-0.0344505,-0.0542883);
+            Eigen::VectorXcf Refx = MatrixXcf::Zero(4, 1);
+            Refx << cd(8.48528,0), cd(6.04926,-3.83876), cd(6.10956,-3.87703), cd(-0.0243602,-0.0383876);
             
             CHECK(solver.GetxVector().isApprox(Refx));
             
             THEN("Check that currents are correctly calculated") {
                 solver.setCurrents( c.GetComponents(), c.GetOmega() );
+
+                solver.resultListed(std::cout);
             }
         }
     }
 
     GIVEN("Dc circuit with a inductor and resistor in series parellel") {
-        std::cout << "current test start\n";
-
         Circuit c = Circuit();
         
         std::shared_ptr<Node> g = c.AddNode("0");
@@ -237,9 +237,6 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
         WHEN("solved") {
             MNAsolver solver = MNAsolver();
 
-            std::cout << "A:\n" << A << std::endl;
-            std::cout << "z:\n" << z << std::endl;
-
             solver.solveSteady(A, z, c.GetOmega(), node_indexes, voltage_source_indexes, inductor_indexes);
 
             Eigen::VectorXcf Refx = MatrixXf::Zero(5, 1);
@@ -249,8 +246,6 @@ SCENARIO("Producing matrices from circuit with reactive elements") {
             
             THEN("Check that currents are correctly calculated") {
                 solver.setCurrents( c.GetComponents(), c.GetOmega() );
-
-                solver.resultListed( std::cout );
             }
         }
     }
