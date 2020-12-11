@@ -555,7 +555,7 @@ void CircuitSimulatorGUI::ProcessEvents() {
                             auto it = WireClick(mouse);
                             if (it != wires_.end() && (*it) != addingWire_) {
                                 if ((addingWire_->GetNode() && (*it)->GetNode()) ||
-                                    !addingWire_->GetNode() && (*it)->GetNode()) {
+                                    (!addingWire_->GetNode() && (*it)->GetNode()) ) {
                                     // both adding wire and the clicked wire has a node
                                     // or addingWire doenst have a node but clicked wire has
                                     addingWire_->SetNode((*it)->GetNode());
@@ -966,6 +966,8 @@ void CircuitSimulatorGUI::RenderPopup() {
                 if (popup_value_ > 0 || editingComponent_->GetClass() == ACTIVE) {
                     editingComponent_->SetValue(popup_value_);
                 }
+                ImGui::CloseCurrentPopup();
+                editingComponent_ = nullptr;
             }
             ImGui::SameLine();
             if (ImGui::Button("Cancel")) {
